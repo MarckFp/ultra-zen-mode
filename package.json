@@ -1,6 +1,6 @@
 {
   "name": "ultra-zen-mode",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Obsidian plugin – distraction-free zen reading/writing mode",
   "main": "main.js",
   "scripts": {
@@ -9,16 +9,22 @@
     "release": "tsx scripts/release.ts",
     "prepare": "husky"
   },
-  "keywords": ["obsidian", "plugin", "zen", "focus"],
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "zen",
+    "focus"
+  ],
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.6.0",
     "builtin-modules": "^3.3.0",
-    "esbuild": "^0.21.5",
-    "obsidian": "latest",
-    "tsx": "^4.19.2",
+    "esbuild": "^0.28.0",
+    "obsidian": "^1.12.3",
+    "tsx": "^4.21.0",
     "tslib": "^2.6.3",
-    "typescript": "^5.5.0",
-    "husky": "^9.1.7"
+    "typescript": "^6.0.3",
+    "husky": "^9.1.7",
+    "prettier": "3.8.3"
   }
 }

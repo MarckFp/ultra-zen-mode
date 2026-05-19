@@ -7,3 +7,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 ---
 
 ## [Unreleased]
+
+## [1.0.2] – 2026-05-19
+
+- Fixed missing newline at the end of the release script
+## [1.0.0] – 2026-05-19
+
+- Initial release
