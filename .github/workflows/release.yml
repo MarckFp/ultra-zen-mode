@@ -1,0 +1,134 @@
+name: Release Obsidian Plugin
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update plugin version from tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+
+          node -e '
+            const fs = require("fs");
+            const version = process.argv[1];
+
+            const manifestPath = "manifest.json";
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+            manifest.version = version;
+            fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+            const versionsPath = "versions.json";
+            const versions = JSON.parse(fs.readFileSync(versionsPath, "utf8"));
+            const minAppVersion = manifest.minAppVersion;
+            versions[version] = minAppVersion;
+            fs.writeFileSync(versionsPath, `${JSON.stringify(versions, null, 2)}\n`);
+          ' "$VERSION"
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Generate artifact attestations
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            styles.css
+
+      - name: Extract changelog notes for this version
+        id: changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"   # strip leading "v" if present
+          node -e "
+            const fs = require('fs');
+            if (!fs.existsSync('CHANGELOG.md')) { process.stdout.write(''); process.exit(0); }
+            const txt = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const lines = txt.split('\n');
+            let capture = false;
+            const out = [];
+            for (const line of lines) {
+              if (line.startsWith('## [' + '$VERSION' + ']')) { capture = true; continue; }
+              if (capture && line.startsWith('## [')) break;
+              if (capture) out.push(line);
+            }
+            process.stdout.write(out.join('\n').trim());
+          " > /tmp/release_notes.md
+          # Fallback if the version wasn't found in CHANGELOG.md
+          if [ ! -s /tmp/release_notes.md ]; then
+            echo "Release ${GITHUB_REF_NAME}" > /tmp/release_notes.md
+          fi
+
+      - name: Detect optional style file
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STYLE_FILE=""
+          if [ -f "styles.css" ]; then
+            STYLE_FILE="styles.css"
+          elif [ -f "style.css" ]; then
+            STYLE_FILE="style.css"
+          fi
+
+          echo "style_file=$STYLE_FILE" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update release with changelog notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes-file /tmp/release_notes.md
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes-file /tmp/release_notes.md
+          fi
+
+      - name: Upload assets to tag release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          STYLE_FILE="${{ steps.package.outputs.style_file }}"
+
+          ASSETS=(manifest.json main.js)
+          if [ -n "$STYLE_FILE" ]; then
+            ASSETS+=("$STYLE_FILE")
+          fi
+
+          gh release upload "$TAG" "${ASSETS[@]}" --clobber

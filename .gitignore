@@ -1,0 +1,14 @@
+# Obsidian plugin data
+.obsidian/
+
+# Dependencies
+node_modules/
+
+# Build output
+main.js
+main.js.map
+
+# Lockfiles (keep one if you want reproducible installs)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
