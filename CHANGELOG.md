@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.1.0] – 2026-05-19
+
+- Changed import of built-in modules to use 'builtinModules' from 'node:module'
+- Updated CSS selectors to be more specific for hiding elements in Zen mode
 ## [1.0.2] – 2026-05-19
 
 - Fixed missing newline at the end of the release script

@@ -5,34 +5,34 @@
    ===================================================================== */
 
 /* ─── Left sidebar (ribbon icon bar + sidebar panel) ──────────────── */
-body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
-body.uzm-hide-left-sidebar .workspace-split.mod-left-split {
-	display: none !important;
+html body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
+html body.uzm-hide-left-sidebar .workspace-split.mod-left-split {
+	display: none;
 }
 
 /* ─── Right sidebar ────────────────────────────────────────────────── */
-body.uzm-hide-right-sidebar .workspace-split.mod-right-split {
-	display: none !important;
+html body.uzm-hide-right-sidebar .workspace-split.mod-right-split {
+	display: none;
 }
 
 /* ─── Note properties / frontmatter ───────────────────────────────── */
-body.uzm-hide-properties .metadata-container {
-	display: none !important;
+html body.uzm-hide-properties .metadata-container {
+	display: none;
 }
 
 /* ─── Inline note title ────────────────────────────────────────────── */
-body.uzm-hide-note-title .inline-title {
-	display: none !important;
+html body.uzm-hide-note-title .inline-title {
+	display: none;
 }
 
 /* ─── Status bar ───────────────────────────────────────────────────── */
-body.uzm-hide-status-bar .status-bar {
-	display: none !important;
+html body.uzm-hide-status-bar .status-bar {
+	display: none;
 }
 
 /* ─── Tab bar ──────────────────────────────────────────────────────── */
-body.uzm-hide-tab-bar .workspace-tab-header-container {
-	display: none !important;
+html body.uzm-hide-tab-bar .workspace-tab-header-container {
+	display: none;
 }
 
 /* ─── Floating exit button ─────────────────────────────────────────── */

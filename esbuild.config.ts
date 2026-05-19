@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import builtins from "builtin-modules";
+import { builtinModules } from "node:module";
 
 const prod: boolean = process.argv[2] === "production";
 
@@ -21,7 +21,7 @@ void (async (): Promise<void> => {
 			"@lezer/common",
 			"@lezer/highlight",
 			"@lezer/lr",
-			...builtins,
+			...builtinModules,
 		],
 		format: "cjs",
 		target: "es2018",
