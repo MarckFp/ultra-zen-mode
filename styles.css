@@ -7,97 +7,100 @@
 /* ─── Left sidebar (ribbon icon bar + sidebar panel) ──────────────── */
 html body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
 html body.uzm-hide-left-sidebar .workspace-split.mod-left-split {
-	display: none;
+  display: none;
 }
 
 /* ─── Right sidebar ────────────────────────────────────────────────── */
 html body.uzm-hide-right-sidebar .workspace-split.mod-right-split {
-	display: none;
+  display: none;
 }
 
 /* ─── Note properties / frontmatter ───────────────────────────────── */
 html body.uzm-hide-properties .metadata-container {
-	display: none;
+  display: none;
 }
 
 /* ─── Inline note title ────────────────────────────────────────────── */
 html body.uzm-hide-note-title .inline-title {
-	display: none;
+  display: none;
 }
 
 /* ─── Status bar ───────────────────────────────────────────────────── */
 html body.uzm-hide-status-bar .status-bar {
-	display: none;
+  display: none;
 }
 
 /* ─── Tab bar ──────────────────────────────────────────────────────── */
 html body.uzm-hide-tab-bar .workspace-tab-header-container {
-	display: none;
+  display: none;
 }
 
 /* ─── Floating exit button ─────────────────────────────────────────── */
 .uzm-exit-btn {
-	/* Always visible, fixed to bottom-right of the viewport */
-	position: fixed;
-	bottom: 1.75rem;
-	right: 1.75rem;
-	z-index: 9999;
+  /* Always visible, fixed to bottom-right of the viewport */
+  position: fixed;
+  bottom: 1.75rem;
+  right: 1.75rem;
+  z-index: 9999;
 
-	/* Size & shape */
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 2.75rem;
-	height: 2.75rem;
-	border-radius: 50%;
+  /* Size & shape */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
 
-	/* Semi-transparent dark glass look (dark theme default) */
-	background: rgba(20, 20, 20, 0.45);
-	color: rgba(255, 255, 255, 0.75);
-	border: 1px solid rgba(255, 255, 255, 0.12);
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
+  /* Semi-transparent dark glass look (dark theme default) */
+  background: rgba(20, 20, 20, 0.45);
+  color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
-	/* Subtle by default, visible on hover */
-	opacity: 0.3;
-	cursor: pointer;
-	transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease;
+  /* Subtle by default, visible on hover */
+  opacity: 0.3;
+  cursor: pointer;
+  transition:
+    opacity 0.25s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
 
-	/* Remove default button styles */
-	padding: 0;
-	outline: none;
+  /* Remove default button styles */
+  padding: 0;
+  outline: none;
 }
 
 .uzm-exit-btn:hover,
 .uzm-exit-btn:focus-visible {
-	opacity: 1;
-	transform: scale(1.1);
-	background: rgba(40, 40, 40, 0.75);
+  opacity: 1;
+  transform: scale(1.1);
+  background: rgba(40, 40, 40, 0.75);
 }
 
 .uzm-exit-btn:active {
-	transform: scale(0.94);
-	transition: transform 0.1s ease;
+  transform: scale(0.94);
+  transition: transform 0.1s ease;
 }
 
 /* Light theme adjustment */
 .theme-light .uzm-exit-btn {
-	background: rgba(245, 245, 245, 0.55);
-	color: rgba(20, 20, 20, 0.8);
-	border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(245, 245, 245, 0.55);
+  color: rgba(20, 20, 20, 0.8);
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .theme-light .uzm-exit-btn:hover,
 .theme-light .uzm-exit-btn:focus-visible {
-	background: rgba(230, 230, 230, 0.85);
+  background: rgba(230, 230, 230, 0.85);
 }
 
 /* Mobile / touch: slightly larger tap target */
 @media (max-width: 768px) {
-	.uzm-exit-btn {
-		width: 3.25rem;
-		height: 3.25rem;
-		bottom: 1.5rem;
-		right: 1.5rem;
-	}
+  .uzm-exit-btn {
+    width: 3.25rem;
+    height: 3.25rem;
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
 }

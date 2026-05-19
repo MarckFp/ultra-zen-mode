@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.1.1] – 2026-05-19
+
+- Changed indentation in esbuild configuration for consistency
+- Updated CSS styles for better readability
+- Improved formatting of exit button styles in CSS
 ## [1.1.0] – 2026-05-19
 
 - Changed import of built-in modules to use 'builtinModules' from 'node:module'
