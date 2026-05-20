@@ -56,6 +56,14 @@ html body.uzm-active.uzm-lock-note .markdown-source-view {
   pointer-events: none;
 }
 
+/* While the layout-change handler is reverting the mode switch, blank  */
+/* the entire view area so neither the source editor nor the momentary  */
+/* empty state is ever visible.  Removed after two rAF cycles (painted).*/
+html body.uzm-active.uzm-lock-note.uzm-reverting .view-content {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Disable double-tap-to-zoom on the reading view so the browser never  */
 /* generates a dblclick event from two taps (avoids flicker on mobile). */
 html body.uzm-active.uzm-lock-note .markdown-preview-view {

@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.8.0] – 2026-05-20
+
+- Added a new CSS class for reverting mode switches to prevent flickering during transitions.
+- Changed the layout-change handler to add and remove the reverting class for a smoother user experience when locking notes.
 ## [1.7.0] – 2026-05-20
 
 - Added support to block edge swipes that open hidden sidebars when Zen mode is active.

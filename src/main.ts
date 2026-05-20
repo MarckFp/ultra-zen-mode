@@ -39,6 +39,7 @@ const CLS = {
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
   lockNote: "uzm-lock-note",
+  reverting: "uzm-reverting",
   headerSmall: "uzm-header-small",
   headerMedium: "uzm-header-medium",
 } as const;
@@ -124,8 +125,7 @@ export default class UltraZenModePlugin extends Plugin {
         if (!touch) return;
         const x = touch.clientX;
         const edge = 30; // px from the screen edge
-        const blockedLeft =
-          this.settings.hideLeftSidebar && x < edge;
+        const blockedLeft = this.settings.hideLeftSidebar && x < edge;
         const blockedRight =
           this.settings.hideRightSidebar && x > window.innerWidth - edge;
         if (blockedLeft || blockedRight) {
@@ -136,13 +136,26 @@ export default class UltraZenModePlugin extends Plugin {
     );
 
     // ── Lock note: revert any mode switch that slips through ──────────────
+    // If a mode switch reaches Obsidian despite the event interceptors, we
+    // immediately blank the view (uzm-reverting) so the user sees nothing,
+    // revert to preview, then reveal after two rAF cycles (one for DOM update,
+    // one for paint) to guarantee the reading view is rendered first.
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
         if (!this.isZenActive || !this.settings.lockNote) return;
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (view && view.getMode() !== "preview") {
+          document.body.classList.add(CLS.reverting);
           const state = view.getState();
-          void view.setState({ ...state, mode: "preview" }, { history: false });
+          void view
+            .setState({ ...state, mode: "preview" }, { history: false })
+            .then(() => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  document.body.classList.remove(CLS.reverting);
+                });
+              });
+            });
         }
       }),
     );
@@ -173,12 +186,12 @@ export default class UltraZenModePlugin extends Plugin {
   }
 
   private async exitZenMode(): Promise<void> {
-    this.isZenActive = false;
-    // Collapse any sidebar that was internally opened by a swipe while hidden.
-    // Do this *before* removing the CSS classes so the sidebar never flashes.
+    // Collapse sidebars while zen mode CSS is still fully active so the
+    // collapse is completely invisible (sidebars are display:none at this point).
     if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
     if (this.settings.hideRightSidebar)
       this.app.workspace.rightSplit.collapse();
+    this.isZenActive = false;
     this.removeBodyClasses();
     this.unmountFloatingButton();
     await this.restorePreviousMode();
