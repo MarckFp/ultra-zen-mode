@@ -110,9 +110,3 @@ Ultra Zen Mode is intentionally simple and fast. The entire logic lives in a sin
 3. **Deactivate** — removes all classes and the floating button. The UI is instantly restored; no DOM manipulation required.
 
 Because the approach is pure CSS class toggling, it is extremely fast and does not rely on timers, MutationObservers, or any polling.
-
----
-
-## License
-
-[MIT](LICENSE)
