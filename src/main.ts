@@ -2,6 +2,8 @@ import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
+type HeaderPadding = "small" | "medium" | "original";
+
 interface UltraZenModeSettings {
   hideLeftSidebar: boolean;
   hideRightSidebar: boolean;
@@ -10,6 +12,8 @@ interface UltraZenModeSettings {
   hideStatusBar: boolean;
   hideTabBar: boolean;
   switchToReadingMode: boolean;
+  lockNote: boolean;
+  headerPadding: HeaderPadding;
 }
 
 const DEFAULT_SETTINGS: UltraZenModeSettings = {
@@ -20,6 +24,8 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   hideStatusBar: true,
   hideTabBar: true,
   switchToReadingMode: true,
+  lockNote: true,
+  headerPadding: "medium",
 };
 
 // ─── CSS class names applied to <body> ────────────────────────────────────
@@ -32,6 +38,8 @@ const CLS = {
   hideNoteTitle: "uzm-hide-note-title",
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
+  headerSmall: "uzm-header-small",
+  headerMedium: "uzm-header-medium",
 } as const;
 
 // ─── Plugin ───────────────────────────────────────────────────────────────
@@ -60,6 +68,32 @@ export default class UltraZenModePlugin extends Plugin {
 
     // Settings tab
     this.addSettingTab(new UltraZenModeSettingTab(this.app, this));
+
+    // ── Lock note: intercept dblclick before Obsidian handles it ──────────
+    this.registerDomEvent(
+      document,
+      "dblclick",
+      (e: MouseEvent) => {
+        if (!this.isZenActive || !this.settings.lockNote) return;
+        const target = e.target as Element | null;
+        if (target?.closest(".markdown-preview-view")) {
+          e.stopPropagation();
+        }
+      },
+      { capture: true },
+    );
+
+    // ── Lock note: revert any mode switch that slips through ──────────────
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        if (!this.isZenActive || !this.settings.lockNote) return;
+        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (view && view.getMode() !== "preview") {
+          const state = view.getState();
+          void view.setState({ ...state, mode: "preview" }, { history: false });
+        }
+      }),
+    );
   }
 
   onunload(): void {
@@ -127,6 +161,9 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideNoteTitle) classList.add(CLS.hideNoteTitle);
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
+    if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
+    else if (this.settings.headerPadding === "medium") classList.add(CLS.headerMedium);
+    // "original" → no class; Obsidian's default padding is preserved
   }
 
   private removeBodyClasses(): void {
@@ -200,7 +237,11 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    const save = async (key: keyof UltraZenModeSettings, value: boolean) => {
+    type BooleanKey = {
+      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+    }[keyof UltraZenModeSettings];
+
+    const save = async (key: BooleanKey, value: boolean) => {
       this.plugin.settings[key] = value;
       await this.plugin.saveSettings();
     };
@@ -260,14 +301,44 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "switchToReadingMode",
       save,
     );
+
+    this.addToggle(
+      containerEl,
+      "Lock note (prevent editing)",
+      "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active.",
+      "lockNote",
+      save,
+    );
+
+    new Setting(containerEl)
+      .setName("Header bar padding")
+      .setDesc("Height of the top bar left behind after action buttons are hidden.")
+      .addDropdown((dd) =>
+        dd
+          .addOption("small", "Small")
+          .addOption("medium", "Medium")
+          .addOption("original", "Original")
+          .setValue(this.plugin.settings.headerPadding)
+          .onChange(async (value) => {
+            this.plugin.settings.headerPadding = value as HeaderPadding;
+            await this.plugin.saveSettings();
+          }),
+      );
   }
 
   private addToggle(
     el: HTMLElement,
     name: string,
     desc: string,
-    key: keyof UltraZenModeSettings,
-    save: (key: keyof UltraZenModeSettings, value: boolean) => Promise<void>,
+    key: {
+      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+    }[keyof UltraZenModeSettings],
+    save: (
+      key: {
+        [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+      }[keyof UltraZenModeSettings],
+      value: boolean,
+    ) => Promise<void>,
   ): void {
     new Setting(el)
       .setName(name)

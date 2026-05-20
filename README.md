@@ -45,8 +45,14 @@ Open *Settings → Ultra Zen Mode* to choose exactly what gets hidden:
 - **Hide note title** — hides the large inline title above the note body.
 - **Hide status bar** — hides the small bar at the very bottom of the window.
 - **Hide tab bar** — hides the row of open-note tabs above the editor.
+- **Switch to reading mode** — automatically enters reading view when zen mode activates and restores the previous mode on exit.
+- **Lock note (prevent editing)** — blocks double-click and any other gesture that would accidentally switch the note into edit mode while zen mode is active. The floating exit button is the only way to leave zen mode when this is on. *On by default.*
+- **Header bar padding** — controls the height of the top bar left behind after the action buttons are hidden. Three options:
+  - *Small* — nearly flush, minimal gap.
+  - *Medium* — a comfortable reduced gap *(default)*.
+  - *Original* — keeps Obsidian's default header height unchanged.
 
-All toggles take effect the next time you enter Zen Mode, so you can experiment freely.
+All settings take effect the next time you enter Zen Mode, so you can experiment freely.
 
 ---
 

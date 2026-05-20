@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.4.0] – 2026-05-20
+
+- Added a setting to lock the note, preventing editing while Zen mode is active.
+- Introduced a header padding setting with options for small, medium, and original padding.
+- Changed the CSS to adjust the header bar height based on the selected padding option.
 ## [1.3.0] – 2026-05-20
 
 - Added settings to control visibility of various UI elements in Zen Mode.
