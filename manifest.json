@@ -1,7 +1,7 @@
 {
   "id": "ultra-zen-mode",
   "name": "Ultra Zen Mode",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "minAppVersion": "1.5.0",
   "description": "Enter a distraction-free zen mode by hiding sidebars, properties, title and status bar. Works on desktop and mobile.",
   "author": "MarckFp",

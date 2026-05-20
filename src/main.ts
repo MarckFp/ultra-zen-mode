@@ -51,8 +51,6 @@ export default class UltraZenModePlugin extends Plugin {
   private isZenActive = false;
   private floatingBtn: HTMLElement | null = null;
   private previousMode: "source" | "preview" | null = null;
-  /** Timestamp of the last click inside the preview view (for mobile double-tap detection). */
-  private lastPreviewClickTime = 0;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -86,27 +84,27 @@ export default class UltraZenModePlugin extends Plugin {
       { capture: true },
     );
 
-    // ── Lock note: mobile double-tap via two rapid clicks ───────────────
-    // On iOS/Android the dblclick event arrives AFTER the two click events,
-    // so Obsidian may have already triggered the mode switch. Intercept the
-    // second click of any double-tap on non-interactive preview content.
+    // ── Lock note: suppress taps on non-interactive content (mobile) ──────
+    // touchend fires before the synthesised click/dblclick events, so we can
+    // swallow it before Obsidian's own handlers ever see it.
+    // Interactive targets (links, checkboxes, iframes/PDFs, …) are excluded
+    // so navigation and task-toggling still work normally.
     this.registerDomEvent(
       document,
-      "click",
-      (e: MouseEvent) => {
+      "touchend",
+      (e: TouchEvent) => {
         if (!this.isZenActive || !this.settings.lockNote) return;
         const target = e.target as Element | null;
         if (!target?.closest(".markdown-preview-view")) return;
-        // Always let interactive elements through
-        if (target.closest("a, button, input, label, .task-list-item-checkbox")) return;
-        const now = Date.now();
-        const gap = now - this.lastPreviewClickTime;
-        this.lastPreviewClickTime = now;
-        if (gap < 350) {
-          // Second click of a double-tap — swallow it
-          e.stopPropagation();
-          this.lastPreviewClickTime = 0; // reset so a third tap is treated as fresh
-        }
+        if (
+          target.closest(
+            "a, button, input, label, .task-list-item-checkbox, iframe, embed",
+          )
+        )
+          return;
+        // Prevent synthetic click/dblclick and stop Obsidian's touchend handler
+        e.preventDefault();
+        e.stopPropagation();
       },
       { capture: true },
     );

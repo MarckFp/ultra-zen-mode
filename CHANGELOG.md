@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.6.0] – 2026-05-20
+
+- Changed touch event handling to suppress taps on non-interactive content for mobile devices.
+- Removed the lastPreviewClickTime property and related double-tap detection logic.
 ## [1.5.0] – 2026-05-20
 
 - Added a new setting to lock the note during Zen mode to prevent accidental mode switches on mobile devices.
