@@ -10,6 +10,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [1.2.0] – 2026-05-20
 
+- Added a setting to automatically switch to reading mode on activation and restore the previous mode on exit.
+- Changed the plugin to switch to reading mode when entering Zen mode if the setting is enabled.
+- Changed the exit process to restore the previous mode after exiting Zen mode.
+## [1.2.0] – 2026-05-20
+
 - Added support for hiding the mobile navigation bar in Zen mode
 - Changed the positioning of the exit button to account for safe areas on mobile devices
 - Updated styles for the exit button to improve visibility on touch devices

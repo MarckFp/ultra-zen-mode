@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
@@ -9,6 +9,7 @@ interface UltraZenModeSettings {
 	hideNoteTitle: boolean;
 	hideStatusBar: boolean;
 	hideTabBar: boolean;
+	switchToReadingMode: boolean;
 }
 
 const DEFAULT_SETTINGS: UltraZenModeSettings = {
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
 	hideNoteTitle: false,
 	hideStatusBar: true,
 	hideTabBar: true,
+	switchToReadingMode: true,
 };
 
 // ─── CSS class names applied to <body> ────────────────────────────────────
@@ -39,6 +41,7 @@ export default class UltraZenModePlugin extends Plugin {
 
 	private isZenActive = false;
 	private floatingBtn: HTMLElement | null = null;
+	private previousMode: "source" | "preview" | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -62,28 +65,55 @@ export default class UltraZenModePlugin extends Plugin {
 	onunload(): void {
 		// Always clean up when the plugin is disabled
 		if (this.isZenActive) {
-			this.exitZenMode();
+			void this.exitZenMode();
 		}
 	}
 
 	// ─── Public toggle ──────────────────────────────────────────────────────
 
 	toggleZenMode(): void {
-		this.isZenActive ? this.exitZenMode() : this.enterZenMode();
+		void (this.isZenActive ? this.exitZenMode() : this.enterZenMode());
 	}
 
 	// ─── Enter / Exit ───────────────────────────────────────────────────────
 
-	private enterZenMode(): void {
+	private async enterZenMode(): Promise<void> {
 		this.isZenActive = true;
 		this.applyBodyClasses();
 		this.mountFloatingButton();
+		if (this.settings.switchToReadingMode) {
+			await this.switchToReadingMode();
+		}
 	}
 
-	private exitZenMode(): void {
+	private async exitZenMode(): Promise<void> {
 		this.isZenActive = false;
 		this.removeBodyClasses();
 		this.unmountFloatingButton();
+		await this.restorePreviousMode();
+	}
+
+	// ─── Reading mode helpers ───────────────────────────────────────────────
+
+	private async switchToReadingMode(): Promise<void> {
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!view || view.getMode() === "preview") return;
+		this.previousMode = view.getMode();
+		const state = view.getState();
+		await view.setState({ ...state, mode: "preview" }, { history: false });
+	}
+
+	private async restorePreviousMode(): Promise<void> {
+		if (!this.previousMode) return;
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (view) {
+			const state = view.getState();
+			await view.setState(
+				{ ...state, mode: this.previousMode },
+				{ history: false },
+			);
+		}
+		this.previousMode = null;
 	}
 
 	// ─── Body class helpers ─────────────────────────────────────────────────
@@ -220,6 +250,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
 			"Hide tab bar",
 			"Hides the editor tab bar.",
 			"hideTabBar",
+			save,
+		);
+
+		this.addToggle(
+			containerEl,
+			"Switch to reading mode",
+			"Automatically enters reading view on activation and restores the previous mode on exit.",
+			"switchToReadingMode",
 			save,
 		);
 	}

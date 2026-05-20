@@ -8,18 +8,21 @@
 /* desktop: .workspace-split  |  mobile: .workspace-drawer             */
 html body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
 html body.uzm-hide-left-sidebar .workspace-split.mod-left-split,
-html body.uzm-hide-left-sidebar .workspace-drawer.mod-left {
+html body.uzm-hide-left-sidebar .workspace-drawer.mod-left,
+html body.uzm-hide-left-sidebar .sidebar-toggle-button.mod-left {
   display: none;
 }
 
 /* ─── Right sidebar ────────────────────────────────────────────────── */
 html body.uzm-hide-right-sidebar .workspace-split.mod-right-split,
-html body.uzm-hide-right-sidebar .workspace-drawer.mod-right {
+html body.uzm-hide-right-sidebar .workspace-drawer.mod-right,
+html body.uzm-hide-right-sidebar .sidebar-toggle-button.mod-right {
   display: none;
 }
 
 /* ─── Note properties / frontmatter ───────────────────────────────── */
-html body.uzm-hide-properties .metadata-container {
+/* Double class on body boosts specificity to override mobile themes.  */
+html body.uzm-active.uzm-hide-properties .metadata-container {
   display: none;
 }
 
@@ -37,6 +40,20 @@ html body.uzm-hide-status-bar .mobile-navbar {
 /* ─── Tab bar ──────────────────────────────────────────────────────── */
 html body.uzm-hide-tab-bar .workspace-tab-header-container {
   display: none;
+}
+
+/* ─── View action buttons (edit toggle, ⋮ more options) ───────────── */
+/* Always hidden in zen mode — reading needs no toolbar clutter.       */
+html body.uzm-active .view-actions {
+  display: none;
+}
+
+/* ─── Sidebar swipe overlay (mobile) ─────────────────────────── */
+/* Obsidian JS toggles display on this element directly; using          */
+/* visibility + pointer-events wins without needing !important.         */
+html body.uzm-active .workspace-drawer-backdrop {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ─── Floating exit button ─────────────────────────────────────────── */
