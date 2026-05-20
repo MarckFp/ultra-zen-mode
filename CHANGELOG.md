@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.2.0] – 2026-05-20
+
+- Added support for hiding the mobile navigation bar in Zen mode
+- Changed the positioning of the exit button to account for safe areas on mobile devices
+- Updated styles for the exit button to improve visibility on touch devices
 ## [1.1.1] – 2026-05-19
 
 - Changed indentation in esbuild configuration for consistency

@@ -5,13 +5,16 @@
    ===================================================================== */
 
 /* ─── Left sidebar (ribbon icon bar + sidebar panel) ──────────────── */
+/* desktop: .workspace-split  |  mobile: .workspace-drawer             */
 html body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
-html body.uzm-hide-left-sidebar .workspace-split.mod-left-split {
+html body.uzm-hide-left-sidebar .workspace-split.mod-left-split,
+html body.uzm-hide-left-sidebar .workspace-drawer.mod-left {
   display: none;
 }
 
 /* ─── Right sidebar ────────────────────────────────────────────────── */
-html body.uzm-hide-right-sidebar .workspace-split.mod-right-split {
+html body.uzm-hide-right-sidebar .workspace-split.mod-right-split,
+html body.uzm-hide-right-sidebar .workspace-drawer.mod-right {
   display: none;
 }
 
@@ -25,8 +28,9 @@ html body.uzm-hide-note-title .inline-title {
   display: none;
 }
 
-/* ─── Status bar ───────────────────────────────────────────────────── */
-html body.uzm-hide-status-bar .status-bar {
+/* ─── Status bar (desktop) + bottom nav bar (mobile) ──────────────── */
+html body.uzm-hide-status-bar .status-bar,
+html body.uzm-hide-status-bar .mobile-navbar {
   display: none;
 }
 
@@ -37,10 +41,11 @@ html body.uzm-hide-tab-bar .workspace-tab-header-container {
 
 /* ─── Floating exit button ─────────────────────────────────────────── */
 .uzm-exit-btn {
-  /* Always visible, fixed to bottom-right of the viewport */
+  /* Always visible, fixed to bottom-right of the viewport.             */
+  /* env() accounts for iOS notch / Android home-indicator safe areas.  */
   position: fixed;
-  bottom: 1.75rem;
-  right: 1.75rem;
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  right: calc(1.75rem + env(safe-area-inset-right, 0px));
   z-index: 9999;
 
   /* Size & shape */
@@ -95,12 +100,11 @@ html body.uzm-hide-tab-bar .workspace-tab-header-container {
   background: rgba(230, 230, 230, 0.85);
 }
 
-/* Mobile / touch: slightly larger tap target */
-@media (max-width: 768px) {
+/* Touch devices: larger tap target and always-visible (no hover state) */
+@media (hover: none) {
   .uzm-exit-btn {
     width: 3.25rem;
     height: 3.25rem;
-    bottom: 1.5rem;
-    right: 1.5rem;
+    opacity: 0.65;
   }
 }
