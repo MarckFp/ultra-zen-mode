@@ -10,14 +10,14 @@ Works on **desktop, tablet, and mobile**.
 
 When you activate Zen Mode, Ultra Zen Mode hides the parts of the Obsidian interface that aren't your content:
 
-| Element | Hidden by default |
-|---|---|
-| Left sidebar (ribbon + panel) | ✅ |
-| Right sidebar | ✅ |
-| Note properties / frontmatter | ✅ |
-| Tab bar | ✅ |
-| Status bar | ✅ |
-| Inline note title | ❌ (optional) |
+| Element                       | Hidden by default |
+| ----------------------------- | ----------------- |
+| Left sidebar (ribbon + panel) | ✅                |
+| Right sidebar                 | ✅                |
+| Note properties / frontmatter | ✅                |
+| Tab bar                       | ✅                |
+| Status bar                    | ✅                |
+| Inline note title             | ❌ (optional)     |
 
 A small **floating exit button** appears in the bottom-right corner of the screen. It stays out of your way (very transparent) until you hover or tap it, then it comes forward so you can exit Zen Mode with one click.
 
@@ -29,7 +29,7 @@ A small **floating exit button** appears in the bottom-right corner of the scree
 
 1. **Ribbon button** — click the glasses icon (🕶) in the left icon bar.
 2. **Command palette** — open it with `Ctrl/Cmd + P`, search for `Toggle Zen Mode`.
-3. **Hotkey** — assign a keyboard shortcut in *Settings → Hotkeys → Ultra Zen Mode: Toggle Zen Mode*.
+3. **Hotkey** — assign a keyboard shortcut in _Settings → Hotkeys → Ultra Zen Mode: Toggle Zen Mode_.
 
 To exit, click the floating button that appears in the bottom-right corner, or use any of the three methods above again.
 
@@ -37,7 +37,7 @@ To exit, click the floating button that appears in the bottom-right corner, or u
 
 ## Settings
 
-Open *Settings → Ultra Zen Mode* to choose exactly what gets hidden:
+Open _Settings → Ultra Zen Mode_ to choose exactly what gets hidden:
 
 - **Hide left sidebar** — hides the icon ribbon and the sidebar panel on the left.
 - **Hide right sidebar** — hides the sidebar panel on the right.
@@ -46,11 +46,11 @@ Open *Settings → Ultra Zen Mode* to choose exactly what gets hidden:
 - **Hide status bar** — hides the small bar at the very bottom of the window.
 - **Hide tab bar** — hides the row of open-note tabs above the editor.
 - **Switch to reading mode** — automatically enters reading view when zen mode activates and restores the previous mode on exit.
-- **Lock note (prevent editing)** — blocks double-click and any other gesture that would accidentally switch the note into edit mode while zen mode is active. The floating exit button is the only way to leave zen mode when this is on. *On by default.*
+- **Lock note (prevent editing)** — blocks double-click and any other gesture that would accidentally switch the note into edit mode while zen mode is active. The floating exit button is the only way to leave zen mode when this is on. _On by default._
 - **Header bar padding** — controls the height of the top bar left behind after the action buttons are hidden. Three options:
-  - *Small* — nearly flush, minimal gap.
-  - *Medium* — a comfortable reduced gap *(default)*.
-  - *Original* — keeps Obsidian's default header height unchanged.
+  - _Small_ — nearly flush, minimal gap.
+  - _Medium_ — a comfortable reduced gap _(default)_.
+  - _Original_ — keeps Obsidian's default header height unchanged.
 
 All settings take effect the next time you enter Zen Mode, so you can experiment freely.
 
@@ -58,9 +58,9 @@ All settings take effect the next time you enter Zen Mode, so you can experiment
 
 ## Installation
 
-### From the Community Plugin store *(once published)*
+### From the Community Plugin store _(once published)_
 
-1. Open *Settings → Community plugins* and disable Safe Mode if asked.
+1. Open _Settings → Community plugins_ and disable Safe Mode if asked.
 2. Click **Browse**, search for **Ultra Zen Mode**, and install it.
 3. Enable the plugin with the toggle.
 
@@ -69,8 +69,8 @@ All settings take effect the next time you enter Zen Mode, so you can experiment
 1. Download `main.js`, `styles.css`, and `manifest.json` from the [latest release](../../releases/latest).
 2. Create the folder `.obsidian/plugins/ultra-zen-mode/` inside your vault.
 3. Copy the three files into that folder.
-4. Restart Obsidian (or reload plugins via *Settings → Community plugins → Reload plugins*).
-5. Enable **Ultra Zen Mode** in *Settings → Community plugins*.
+4. Restart Obsidian (or reload plugins via _Settings → Community plugins → Reload plugins_).
+5. Enable **Ultra Zen Mode** in _Settings → Community plugins_.
 
 ---
 

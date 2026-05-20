@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.4.1] – 2026-05-20
+
+- Changed formatting of code for better readability
+- Updated description for 'Header bar padding' setting
 ## [1.4.0] – 2026-05-20
 
 - Added a setting to lock the note, preventing editing while Zen mode is active.

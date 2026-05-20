@@ -162,7 +162,8 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
-    else if (this.settings.headerPadding === "medium") classList.add(CLS.headerMedium);
+    else if (this.settings.headerPadding === "medium")
+      classList.add(CLS.headerMedium);
     // "original" → no class; Obsidian's default padding is preserved
   }
 
@@ -238,7 +239,9 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     type BooleanKey = {
-      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
+        ? K
+        : never;
     }[keyof UltraZenModeSettings];
 
     const save = async (key: BooleanKey, value: boolean) => {
@@ -312,7 +315,9 @@ class UltraZenModeSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Header bar padding")
-      .setDesc("Height of the top bar left behind after action buttons are hidden.")
+      .setDesc(
+        "Height of the top bar left behind after action buttons are hidden.",
+      )
       .addDropdown((dd) =>
         dd
           .addOption("small", "Small")
@@ -331,11 +336,15 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     name: string,
     desc: string,
     key: {
-      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
+        ? K
+        : never;
     }[keyof UltraZenModeSettings],
     save: (
       key: {
-        [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean ? K : never;
+        [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
+          ? K
+          : never;
       }[keyof UltraZenModeSettings],
       value: boolean,
     ) => Promise<void>,
