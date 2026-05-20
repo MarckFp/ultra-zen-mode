@@ -8,28 +8,38 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
-## [1.2.0] – 2026-05-20
+## [1.3.0] – 2026-05-20
+
+- Added settings to control visibility of various UI elements in Zen Mode.
+- Implemented a toggle for entering and exiting Zen Mode.
+- Added a floating button for easy access to exit Zen Mode.
+## [1.3.0] – 2026-05-20
 
 - Added a setting to automatically switch to reading mode on activation and restore the previous mode on exit.
 - Changed the plugin to switch to reading mode when entering Zen mode if the setting is enabled.
 - Changed the exit process to restore the previous mode after exiting Zen mode.
+
 ## [1.2.0] – 2026-05-20
 
 - Added support for hiding the mobile navigation bar in Zen mode
 - Changed the positioning of the exit button to account for safe areas on mobile devices
 - Updated styles for the exit button to improve visibility on touch devices
+
 ## [1.1.1] – 2026-05-19
 
 - Changed indentation in esbuild configuration for consistency
 - Updated CSS styles for better readability
 - Improved formatting of exit button styles in CSS
+
 ## [1.1.0] – 2026-05-19
 
 - Changed import of built-in modules to use 'builtinModules' from 'node:module'
 - Updated CSS selectors to be more specific for hiding elements in Zen mode
+
 ## [1.0.2] – 2026-05-19
 
 - Fixed missing newline at the end of the release script
+
 ## [1.0.0] – 2026-05-19
 
 - Initial release
