@@ -38,6 +38,7 @@ const CLS = {
   hideNoteTitle: "uzm-hide-note-title",
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
+  lockNote: "uzm-lock-note",
   headerSmall: "uzm-header-small",
   headerMedium: "uzm-header-medium",
 } as const;
@@ -50,6 +51,8 @@ export default class UltraZenModePlugin extends Plugin {
   private isZenActive = false;
   private floatingBtn: HTMLElement | null = null;
   private previousMode: "source" | "preview" | null = null;
+  /** Timestamp of the last click inside the preview view (for mobile double-tap detection). */
+  private lastPreviewClickTime = 0;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -78,6 +81,31 @@ export default class UltraZenModePlugin extends Plugin {
         const target = e.target as Element | null;
         if (target?.closest(".markdown-preview-view")) {
           e.stopPropagation();
+        }
+      },
+      { capture: true },
+    );
+
+    // ── Lock note: mobile double-tap via two rapid clicks ───────────────
+    // On iOS/Android the dblclick event arrives AFTER the two click events,
+    // so Obsidian may have already triggered the mode switch. Intercept the
+    // second click of any double-tap on non-interactive preview content.
+    this.registerDomEvent(
+      document,
+      "click",
+      (e: MouseEvent) => {
+        if (!this.isZenActive || !this.settings.lockNote) return;
+        const target = e.target as Element | null;
+        if (!target?.closest(".markdown-preview-view")) return;
+        // Always let interactive elements through
+        if (target.closest("a, button, input, label, .task-list-item-checkbox")) return;
+        const now = Date.now();
+        const gap = now - this.lastPreviewClickTime;
+        this.lastPreviewClickTime = now;
+        if (gap < 350) {
+          // Second click of a double-tap — swallow it
+          e.stopPropagation();
+          this.lastPreviewClickTime = 0; // reset so a third tap is treated as fresh
         }
       },
       { capture: true },
@@ -161,6 +189,7 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideNoteTitle) classList.add(CLS.hideNoteTitle);
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
+    if (this.settings.lockNote) classList.add(CLS.lockNote);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
       classList.add(CLS.headerMedium);

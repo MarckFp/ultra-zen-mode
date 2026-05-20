@@ -48,6 +48,14 @@ html body.uzm-active .view-actions {
   display: none;
 }
 
+/* ─── Lock note: source editor invisible while lock is active ──────── */
+/* CSS failsafe: even if the mode switch fires before JS intercepts it, */
+/* the editor is never rendered visibly. layout-change reverts state.   */
+html body.uzm-active.uzm-lock-note .markdown-source-view {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Reduce the header bar height left behind by the hidden buttons.     */
 /* Controlled by the "Header bar padding" setting.                     */
 html body.uzm-active.uzm-header-small .view-header,

@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.5.0] – 2026-05-20
+
+- Added a new setting to lock the note during Zen mode to prevent accidental mode switches on mobile devices.
+- Implemented double-tap detection for locking notes in the preview view on mobile.
+- Updated CSS to ensure the source editor is invisible when the lock note feature is active.
 ## [1.4.1] – 2026-05-20
 
 - Changed formatting of code for better readability
