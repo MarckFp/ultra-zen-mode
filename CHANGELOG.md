@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.7.0] – 2026-05-20
+
+- Added support to block edge swipes that open hidden sidebars when Zen mode is active.
+- Changed event registration for touch events to use window instead of document for better event handling.
+- Added CSS to disable double-tap-to-zoom on the reading view to prevent flicker on mobile.
 ## [1.6.0] – 2026-05-20
 
 - Changed touch event handling to suppress taps on non-interactive content for mobile devices.

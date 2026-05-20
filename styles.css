@@ -56,6 +56,12 @@ html body.uzm-active.uzm-lock-note .markdown-source-view {
   pointer-events: none;
 }
 
+/* Disable double-tap-to-zoom on the reading view so the browser never  */
+/* generates a dblclick event from two taps (avoids flicker on mobile). */
+html body.uzm-active.uzm-lock-note .markdown-preview-view {
+  touch-action: manipulation;
+}
+
 /* Reduce the header bar height left behind by the hidden buttons.     */
 /* Controlled by the "Header bar padding" setting.                     */
 html body.uzm-active.uzm-header-small .view-header,

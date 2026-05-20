@@ -85,12 +85,13 @@ export default class UltraZenModePlugin extends Plugin {
     );
 
     // ── Lock note: suppress taps on non-interactive content (mobile) ──────
-    // touchend fires before the synthesised click/dblclick events, so we can
-    // swallow it before Obsidian's own handlers ever see it.
-    // Interactive targets (links, checkboxes, iframes/PDFs, …) are excluded
-    // so navigation and task-toggling still work normally.
+    // Registered on *window* (capture) so it fires before Obsidian's own
+    // document-level capture handlers, which were registered earlier.
+    // touchend is the right intercept point: it's where the browser decides
+    // whether to synthesise a click/dblclick, and it is not passive by default.
+    // Interactive targets (links, checkboxes, iframes/PDFs, …) are excluded.
     this.registerDomEvent(
-      document,
+      window,
       "touchend",
       (e: TouchEvent) => {
         if (!this.isZenActive || !this.settings.lockNote) return;
@@ -105,6 +106,31 @@ export default class UltraZenModePlugin extends Plugin {
         // Prevent synthetic click/dblclick and stop Obsidian's touchend handler
         e.preventDefault();
         e.stopPropagation();
+      },
+      { capture: true },
+    );
+
+    // ── Block edge swipes that open hidden sidebars ────────────────────────
+    // Obsidian's swipe-to-open gesture recogniser starts on touchstart.
+    // We intercept it on *window* capture (first in the chain) so the
+    // recogniser never records the start position and ignores the gesture.
+    // Only fires when the corresponding sidebar is actually hidden.
+    this.registerDomEvent(
+      window,
+      "touchstart",
+      (e: TouchEvent) => {
+        if (!this.isZenActive) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+        const x = touch.clientX;
+        const edge = 30; // px from the screen edge
+        const blockedLeft =
+          this.settings.hideLeftSidebar && x < edge;
+        const blockedRight =
+          this.settings.hideRightSidebar && x > window.innerWidth - edge;
+        if (blockedLeft || blockedRight) {
+          e.stopPropagation();
+        }
       },
       { capture: true },
     );
@@ -148,6 +174,11 @@ export default class UltraZenModePlugin extends Plugin {
 
   private async exitZenMode(): Promise<void> {
     this.isZenActive = false;
+    // Collapse any sidebar that was internally opened by a swipe while hidden.
+    // Do this *before* removing the CSS classes so the sidebar never flashes.
+    if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
+    if (this.settings.hideRightSidebar)
+      this.app.workspace.rightSplit.collapse();
     this.removeBodyClasses();
     this.unmountFloatingButton();
     await this.restorePreviousMode();
