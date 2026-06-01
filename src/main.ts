@@ -172,6 +172,32 @@ export default class UltraZenModePlugin extends Plugin {
       capture: true,
     });
 
+    // ── Enforce sidebar state during zen mode ─────────────────────────────
+    // Android's OS gesture layer can bypass WebView touch handlers entirely,
+    // so the touch interceptors above are best-effort. This handler is the
+    // guaranteed fallback: whenever a hidden sidebar is opened (even by a
+    // gesture that slipped through), immediately collapse it again.
+    // The CSS display:none ensures it was never visible; this call corrects
+    // the internal layout state that would otherwise compress the content area
+    // and break scrolling.
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        if (!this.isZenActive) return;
+        if (
+          this.settings.hideLeftSidebar &&
+          !this.app.workspace.leftSplit.collapsed
+        ) {
+          this.app.workspace.leftSplit.collapse();
+        }
+        if (
+          this.settings.hideRightSidebar &&
+          !this.app.workspace.rightSplit.collapsed
+        ) {
+          this.app.workspace.rightSplit.collapse();
+        }
+      }),
+    );
+
     // ── Lock note: revert any mode switch that slips through ──────────────
     // If a mode switch reaches Obsidian despite the event interceptors, we
     // immediately blank the view (uzm-reverting) so the user sees nothing,

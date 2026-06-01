@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.10.0] – 2026-06-01
+
+- Added event handler to enforce sidebar state during zen mode, collapsing any opened sidebars if configured to hide them.
+- Changed CSS for the workspace tab header container to improve layout handling in frameless mode.
 ## [1.9.0] – 2026-06-01
 
 - Added touch event suppression for edge swipes on mobile devices to enhance Zen mode functionality.

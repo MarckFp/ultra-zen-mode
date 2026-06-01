@@ -58,14 +58,17 @@ html body.uzm-hide-tab-bar .workspace-tab-header-container {
 /* container doubles as the titlebar drag area and is the element that   */
 /* Obsidian / Electron samples to set the window-control button colour.  */
 /* Keep it visible as an empty strip; hide only the tab content inside.  */
-html body.uzm-active.uzm-hide-tab-bar.is-frameless .workspace-tab-header-container {
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-container {
   display: block;
   overflow: hidden;
   min-height: unset;
   height: var(--header-height, 2.5rem);
   padding: 0;
 }
-html body.uzm-active.uzm-hide-tab-bar.is-frameless
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
   .workspace-tab-header-container-inner {
   display: none;
 }
