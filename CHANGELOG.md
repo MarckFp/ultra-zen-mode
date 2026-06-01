@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.13.0] – 2026-06-01
+
+- Removed touch blocking logic for hidden sidebars in mobile mode
+- Added data-ignore-swipe attribute to document body to prevent swipe gestures during zen mode
+- Cleaned up code related to blocked touch identifiers
 ## [1.12.0] – 2026-06-01
 
 - Added functionality to observe drawer elements and collapse them when opened during Zen mode.

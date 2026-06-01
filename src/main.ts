@@ -54,8 +54,6 @@ export default class UltraZenModePlugin extends Plugin {
   private isZenActive = false;
   private floatingBtn: HTMLElement | null = null;
   private previousMode: "source" | "preview" | null = null;
-  /** Touch identifiers that started within a hidden sidebar edge — suppressed for their full lifetime. */
-  private blockedTouches = new Set<number>();
   /** Saved value of Obsidian's swipeToOpenDrawers config, restored on exit. */
   private savedSwipeDrawers: boolean | null = null;
   /** MutationObservers watching drawer elements so they can be collapsed the moment Obsidian opens them. */
@@ -118,70 +116,6 @@ export default class UltraZenModePlugin extends Plugin {
       },
       { capture: true },
     );
-
-    // ── Block edge swipes that open hidden sidebars (Android / mobile) ──────
-    // We track each edge-origin touch by identifier and suppress the *entire*
-    // gesture (start → move → end/cancel). stopPropagation alone is not enough:
-    // Obsidian's recogniser may also listen on window-capture, and touchmove
-    // events keep driving the gesture even after the touchstart is stopped.
-    // passive:false is required so preventDefault() is honoured by the browser.
-    this.registerDomEvent(
-      window,
-      "touchstart",
-      (e: TouchEvent) => {
-        if (!this.isZenActive) return;
-        for (let i = 0; i < e.changedTouches.length; i++) {
-          const touch = e.changedTouches[i];
-          const x = touch.clientX;
-          const edge = 50; // px — wide enough for Android's gesture hit-zone
-          const blockedLeft = this.settings.hideLeftSidebar && x < edge;
-          const blockedRight =
-            this.settings.hideRightSidebar && x > window.innerWidth - edge;
-          // Block swipe-up-from-bottom which triggers the mobile toolbar /
-          // command palette when the status bar / navbar is hidden.
-          const blockedBottom =
-            this.settings.hideStatusBar &&
-            touch.clientY > window.innerHeight - edge;
-          if (blockedLeft || blockedRight || blockedBottom) {
-            this.blockedTouches.add(touch.identifier);
-            e.stopPropagation();
-            e.preventDefault();
-          }
-        }
-      },
-      { capture: true, passive: false },
-    );
-
-    // Suppress any move belonging to a blocked touch so the gesture never
-    // progresses, even if the touchstart somehow slipped through.
-    this.registerDomEvent(
-      window,
-      "touchmove",
-      (e: TouchEvent) => {
-        if (!this.isZenActive || this.blockedTouches.size === 0) return;
-        for (let i = 0; i < e.changedTouches.length; i++) {
-          if (this.blockedTouches.has(e.changedTouches[i].identifier)) {
-            e.stopPropagation();
-            e.preventDefault();
-            return;
-          }
-        }
-      },
-      { capture: true, passive: false },
-    );
-
-    // Clean up blocked touch IDs when fingers lift or are cancelled.
-    const releaseBlockedTouch = (e: TouchEvent): void => {
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        this.blockedTouches.delete(e.changedTouches[i].identifier);
-      }
-    };
-    this.registerDomEvent(window, "touchend", releaseBlockedTouch, {
-      capture: true,
-    });
-    this.registerDomEvent(window, "touchcancel", releaseBlockedTouch, {
-      capture: true,
-    });
 
     // ── Enforce sidebar state during zen mode ─────────────────────────────
     // Android's OS gesture layer can bypass WebView touch handlers entirely,
@@ -272,6 +206,11 @@ export default class UltraZenModePlugin extends Plugin {
       (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
       null;
     vault["setConfig"]?.("swipeToOpenDrawers", false);
+    // Obsidian's mobile gesture recogniser skips elements (and their ancestors)
+    // that carry the data-ignore-swipe attribute.  Setting it on document.body
+    // suspends all swipe-to-open-sidebar and swipe-down-command-palette
+    // gestures while zen mode is active.
+    document.body.setAttribute("data-ignore-swipe", "true");
 
     this.isZenActive = true;
     // Ensure drawers are collapsed before applying CSS so there is never a
@@ -303,6 +242,7 @@ export default class UltraZenModePlugin extends Plugin {
       vault["setConfig"]?.("swipeToOpenDrawers", this.savedSwipeDrawers);
       this.savedSwipeDrawers = null;
     }
+    document.body.removeAttribute("data-ignore-swipe");
     this.stopWatchingDrawers();
     // Collapse sidebars while zen mode CSS is still fully active so the
     // collapse is completely invisible (sidebars are display:none at this point).
@@ -310,7 +250,6 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideRightSidebar)
       this.app.workspace.rightSplit.collapse();
     this.isZenActive = false;
-    this.blockedTouches.clear();
     this.removeBodyClasses();
     this.unmountFloatingButton();
     await this.restorePreviousMode();
