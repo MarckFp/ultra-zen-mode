@@ -5,8 +5,7 @@ import { App, MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 type HeaderPadding = "small" | "medium" | "original";
 
 interface UltraZenModeSettings {
-  hideLeftSidebar: boolean;
-  hideRightSidebar: boolean;
+  hideSidebars: boolean;
   hideProperties: boolean;
   hideNoteTitle: boolean;
   hideStatusBar: boolean;
@@ -18,8 +17,7 @@ interface UltraZenModeSettings {
 }
 
 const DEFAULT_SETTINGS: UltraZenModeSettings = {
-  hideLeftSidebar: true,
-  hideRightSidebar: true,
+  hideSidebars: true,
   hideProperties: true,
   hideNoteTitle: false,
   hideStatusBar: true,
@@ -30,12 +28,17 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   headerPadding: "medium",
 };
 
+type BooleanSettingKey = {
+  [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
+    ? K
+    : never;
+}[keyof UltraZenModeSettings];
+
 // ─── CSS class names applied to <body> ────────────────────────────────────
 
 const CLS = {
   active: "uzm-active",
-  hideLeftSidebar: "uzm-hide-left-sidebar",
-  hideRightSidebar: "uzm-hide-right-sidebar",
+  hideSidebars: "uzm-hide-sidebars",
   hideProperties: "uzm-hide-properties",
   hideNoteTitle: "uzm-hide-note-title",
   hideStatusBar: "uzm-hide-status-bar",
@@ -118,28 +121,14 @@ export default class UltraZenModePlugin extends Plugin {
     );
 
     // ── Enforce sidebar state during zen mode ─────────────────────────────
-    // Android's OS gesture layer can bypass WebView touch handlers entirely,
-    // so the touch interceptors above are best-effort. This handler is the
-    // guaranteed fallback: whenever a hidden sidebar is opened (even by a
-    // gesture that slipped through), immediately collapse it again.
-    // The CSS display:none ensures it was never visible; this call corrects
-    // the internal layout state that would otherwise compress the content area
-    // and break scrolling.
+    // Fallback: if a gesture bypasses the JS blocker, re-collapse the sidebar.
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        if (!this.isZenActive) return;
-        if (
-          this.settings.hideLeftSidebar &&
-          !this.app.workspace.leftSplit.collapsed
-        ) {
+        if (!this.isZenActive || !this.settings.hideSidebars) return;
+        if (!this.app.workspace.leftSplit.collapsed)
           this.app.workspace.leftSplit.collapse();
-        }
-        if (
-          this.settings.hideRightSidebar &&
-          !this.app.workspace.rightSplit.collapsed
-        ) {
+        if (!this.app.workspace.rightSplit.collapsed)
           this.app.workspace.rightSplit.collapse();
-        }
       }),
     );
 
@@ -196,36 +185,26 @@ export default class UltraZenModePlugin extends Plugin {
   // ─── Enter / Exit ───────────────────────────────────────────────────────
 
   private async enterZenMode(): Promise<void> {
-    // Disable Obsidian's swipe-to-open drawers while in zen mode so Android
-    // OS-level edge gestures no longer open hidden sidebars.
-    const vault = this.app.vault as unknown as Record<
-      string,
-      (k: string, v?: unknown) => unknown
-    >;
-    this.savedSwipeDrawers =
-      (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
-      null;
-    vault["setConfig"]?.("swipeToOpenDrawers", false);
-    // Obsidian's mobile gesture recogniser skips elements (and their ancestors)
-    // that carry the data-ignore-swipe attribute.  Setting it on document.body
-    // suspends all swipe-to-open-sidebar and swipe-down-command-palette
-    // gestures while zen mode is active.
-    document.body.setAttribute("data-ignore-swipe", "true");
+    if (this.settings.hideSidebars) {
+      // Disable swipe-to-open drawers and block all swipe gestures via data-ignore-swipe.
+      const vault = this.app.vault as unknown as Record<
+        string,
+        (k: string, v?: unknown) => unknown
+      >;
+      this.savedSwipeDrawers =
+        (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
+        null;
+      vault["setConfig"]?.("swipeToOpenDrawers", false);
+      document.body.setAttribute("data-ignore-swipe", "true");
+    }
 
     this.isZenActive = true;
-    // Ensure drawers are collapsed before applying CSS so there is never a
-    // flash of an open sidebar becoming hidden.
-    if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
-    if (this.settings.hideRightSidebar)
+    if (this.settings.hideSidebars) {
+      this.app.workspace.leftSplit.collapse();
       this.app.workspace.rightSplit.collapse();
+    }
     this.applyBodyClasses();
     this.mountFloatingButton();
-    // Watch drawer DOM elements directly.  On Android the OS-level gesture
-    // opens the drawer outside the WebView's touch event flow, so the
-    // layout-change fallback may not fire in time.  A MutationObserver fires
-    // synchronously on the first microtask after any attribute mutation on the
-    // drawer element (Obsidian adds/removes is-open or modifies style), giving
-    // us the fastest possible reaction.
     this.startWatchingDrawers();
     if (this.settings.switchToReadingMode) {
       await this.switchToReadingMode();
@@ -233,7 +212,6 @@ export default class UltraZenModePlugin extends Plugin {
   }
 
   private async exitZenMode(): Promise<void> {
-    // Restore swipe-to-open drawers setting before anything else.
     if (this.savedSwipeDrawers !== null) {
       const vault = this.app.vault as unknown as Record<
         string,
@@ -244,11 +222,10 @@ export default class UltraZenModePlugin extends Plugin {
     }
     document.body.removeAttribute("data-ignore-swipe");
     this.stopWatchingDrawers();
-    // Collapse sidebars while zen mode CSS is still fully active so the
-    // collapse is completely invisible (sidebars are display:none at this point).
-    if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
-    if (this.settings.hideRightSidebar)
+    if (this.settings.hideSidebars) {
+      this.app.workspace.leftSplit.collapse();
       this.app.workspace.rightSplit.collapse();
+    }
     this.isZenActive = false;
     this.removeBodyClasses();
     this.unmountFloatingButton();
@@ -257,36 +234,22 @@ export default class UltraZenModePlugin extends Plugin {
 
   // ─── Drawer watcher ────────────────────────────────────────────────────
 
-  /** Begin observing each visible drawer element for attribute mutations.
-   *  When Obsidian's internal gesture handler opens a drawer (by toggling a
-   *  class or inline style) the observer fires and immediately collapses it,
-   *  correcting the internal layout state before the next paint. */
   private startWatchingDrawers(): void {
-    const pairs = [
-      {
-        sel: ".workspace-drawer.mod-left",
-        getSplit: () => this.app.workspace.leftSplit,
-        enabled: this.settings.hideLeftSidebar,
-      },
-      {
-        sel: ".workspace-drawer.mod-right",
-        getSplit: () => this.app.workspace.rightSplit,
-        enabled: this.settings.hideRightSidebar,
-      },
-    ] as const;
-
-    for (const { sel, getSplit, enabled } of pairs) {
-      if (!enabled) continue;
+    if (!this.settings.hideSidebars) return;
+    const watch = (
+      sel: string,
+      getSplit: () => { collapsed: boolean; collapse(): void },
+    ) => {
       const el = document.querySelector(sel);
-      if (!el) continue;
+      if (!el) return;
       const obs = new MutationObserver(() => {
-        if (!this.isZenActive) return;
-        const split = getSplit();
-        if (!split.collapsed) split.collapse();
+        if (this.isZenActive && !getSplit().collapsed) getSplit().collapse();
       });
       obs.observe(el, { attributes: true, childList: false, subtree: false });
       this.drawerObservers.push(obs);
-    }
+    };
+    watch(".workspace-drawer.mod-left", () => this.app.workspace.leftSplit);
+    watch(".workspace-drawer.mod-right", () => this.app.workspace.rightSplit);
   }
 
   private stopWatchingDrawers(): void {
@@ -322,8 +285,7 @@ export default class UltraZenModePlugin extends Plugin {
   private applyBodyClasses(): void {
     const { classList } = document.body;
     classList.add(CLS.active);
-    if (this.settings.hideLeftSidebar) classList.add(CLS.hideLeftSidebar);
-    if (this.settings.hideRightSidebar) classList.add(CLS.hideRightSidebar);
+    if (this.settings.hideSidebars) classList.add(CLS.hideSidebars);
     if (this.settings.hideProperties) classList.add(CLS.hideProperties);
     if (this.settings.hideNoteTitle) classList.add(CLS.hideNoteTitle);
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
@@ -406,30 +368,16 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    type BooleanKey = {
-      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
-        ? K
-        : never;
-    }[keyof UltraZenModeSettings];
-
-    const save = async (key: BooleanKey, value: boolean) => {
+    const save = async (key: BooleanSettingKey, value: boolean) => {
       this.plugin.settings[key] = value;
       await this.plugin.saveSettings();
     };
 
     this.addToggle(
       containerEl,
-      "Hide left sidebar",
-      "Hides the left icon ribbon and sidebar panel.",
-      "hideLeftSidebar",
-      save,
-    );
-
-    this.addToggle(
-      containerEl,
-      "Hide right sidebar",
-      "Hides the right sidebar panel.",
-      "hideRightSidebar",
+      "Hide sidebars and command palette",
+      "Hides both sidebars, the ribbon, and blocks swipe gestures that open them or the command palette.",
+      "hideSidebars",
       save,
     );
 
@@ -511,19 +459,8 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     el: HTMLElement,
     name: string,
     desc: string,
-    key: {
-      [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
-        ? K
-        : never;
-    }[keyof UltraZenModeSettings],
-    save: (
-      key: {
-        [K in keyof UltraZenModeSettings]: UltraZenModeSettings[K] extends boolean
-          ? K
-          : never;
-      }[keyof UltraZenModeSettings],
-      value: boolean,
-    ) => Promise<void>,
+    key: BooleanSettingKey,
+    save: (key: BooleanSettingKey, value: boolean) => Promise<void>,
   ): void {
     new Setting(el)
       .setName(name)

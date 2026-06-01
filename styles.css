@@ -4,32 +4,16 @@
    leaks outside of zen mode.
    ===================================================================== */
 
-/* ─── Left sidebar (ribbon icon bar + sidebar panel) ──────────────── */
+/* ─── Sidebars (ribbon + panels, both sides) ─────────────────────── */
 /* desktop: .workspace-split  |  mobile: .workspace-drawer             */
-html body.uzm-hide-left-sidebar .workspace-ribbon.mod-left,
-html body.uzm-hide-left-sidebar .workspace-split.mod-left-split,
-html body.uzm-hide-left-sidebar .workspace-drawer.mod-left,
-html body.uzm-hide-left-sidebar .sidebar-toggle-button.mod-left {
+html body.uzm-hide-sidebars .workspace-ribbon.mod-left,
+html body.uzm-hide-sidebars .workspace-split.mod-left-split,
+html body.uzm-hide-sidebars .workspace-drawer.mod-left,
+html body.uzm-hide-sidebars .sidebar-toggle-button.mod-left,
+html body.uzm-hide-sidebars .workspace-split.mod-right-split,
+html body.uzm-hide-sidebars .workspace-drawer.mod-right,
+html body.uzm-hide-sidebars .sidebar-toggle-button.mod-right {
   display: none;
-}
-
-/* Prevent the hidden drawer from receiving touch events so that the     */
-/* swipe-to-open gesture cannot start even if it escapes the JS blocker. */
-html body.uzm-active.uzm-hide-left-sidebar .workspace-drawer.mod-left {
-  touch-action: none;
-  pointer-events: none;
-}
-
-/* ─── Right sidebar ────────────────────────────────────────────────── */
-html body.uzm-hide-right-sidebar .workspace-split.mod-right-split,
-html body.uzm-hide-right-sidebar .workspace-drawer.mod-right,
-html body.uzm-hide-right-sidebar .sidebar-toggle-button.mod-right {
-  display: none;
-}
-
-html body.uzm-active.uzm-hide-right-sidebar .workspace-drawer.mod-right {
-  touch-action: none;
-  pointer-events: none;
 }
 
 /* ─── Note properties / frontmatter ───────────────────────────────── */

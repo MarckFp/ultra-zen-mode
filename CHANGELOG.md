@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.14.0] – 2026-06-01
+
+- Changed sidebar visibility settings to a single option for both left and right sidebars.
+- Updated default settings to reflect the new sidebar visibility option.
+- Modified event handling to collapse sidebars based on the new single setting.
 ## [1.13.0] – 2026-06-01
 
 - Removed touch blocking logic for hidden sidebars in mobile mode
