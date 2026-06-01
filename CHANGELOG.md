@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.9.0] – 2026-06-01
+
+- Added touch event suppression for edge swipes on mobile devices to enhance Zen mode functionality.
+- Implemented a mechanism to track and block touch gestures that could open hidden sidebars while Zen mode is active.
+- Added CSS rules to prevent hidden sidebars from receiving touch events, ensuring swipe gestures cannot initiate.
 ## [1.8.0] – 2026-05-20
 
 - Added a new CSS class for reverting mode switches to prevent flickering during transitions.

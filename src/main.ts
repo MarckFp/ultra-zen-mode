@@ -52,6 +52,8 @@ export default class UltraZenModePlugin extends Plugin {
   private isZenActive = false;
   private floatingBtn: HTMLElement | null = null;
   private previousMode: "source" | "preview" | null = null;
+  /** Touch identifiers that started within a hidden sidebar edge — suppressed for their full lifetime. */
+  private blockedTouches = new Set<number>();
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -111,29 +113,64 @@ export default class UltraZenModePlugin extends Plugin {
       { capture: true },
     );
 
-    // ── Block edge swipes that open hidden sidebars ────────────────────────
-    // Obsidian's swipe-to-open gesture recogniser starts on touchstart.
-    // We intercept it on *window* capture (first in the chain) so the
-    // recogniser never records the start position and ignores the gesture.
-    // Only fires when the corresponding sidebar is actually hidden.
+    // ── Block edge swipes that open hidden sidebars (Android / mobile) ──────
+    // We track each edge-origin touch by identifier and suppress the *entire*
+    // gesture (start → move → end/cancel). stopPropagation alone is not enough:
+    // Obsidian's recogniser may also listen on window-capture, and touchmove
+    // events keep driving the gesture even after the touchstart is stopped.
+    // passive:false is required so preventDefault() is honoured by the browser.
     this.registerDomEvent(
       window,
       "touchstart",
       (e: TouchEvent) => {
         if (!this.isZenActive) return;
-        const touch = e.touches[0];
-        if (!touch) return;
-        const x = touch.clientX;
-        const edge = 30; // px from the screen edge
-        const blockedLeft = this.settings.hideLeftSidebar && x < edge;
-        const blockedRight =
-          this.settings.hideRightSidebar && x > window.innerWidth - edge;
-        if (blockedLeft || blockedRight) {
-          e.stopPropagation();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const touch = e.changedTouches[i];
+          const x = touch.clientX;
+          const edge = 50; // px — wide enough for Android's gesture hit-zone
+          const blockedLeft = this.settings.hideLeftSidebar && x < edge;
+          const blockedRight =
+            this.settings.hideRightSidebar && x > window.innerWidth - edge;
+          if (blockedLeft || blockedRight) {
+            this.blockedTouches.add(touch.identifier);
+            e.stopPropagation();
+            e.preventDefault();
+          }
         }
       },
-      { capture: true },
+      { capture: true, passive: false },
     );
+
+    // Suppress any move belonging to a blocked touch so the gesture never
+    // progresses, even if the touchstart somehow slipped through.
+    this.registerDomEvent(
+      window,
+      "touchmove",
+      (e: TouchEvent) => {
+        if (!this.isZenActive || this.blockedTouches.size === 0) return;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (this.blockedTouches.has(e.changedTouches[i].identifier)) {
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+          }
+        }
+      },
+      { capture: true, passive: false },
+    );
+
+    // Clean up blocked touch IDs when fingers lift or are cancelled.
+    const releaseBlockedTouch = (e: TouchEvent): void => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        this.blockedTouches.delete(e.changedTouches[i].identifier);
+      }
+    };
+    this.registerDomEvent(window, "touchend", releaseBlockedTouch, {
+      capture: true,
+    });
+    this.registerDomEvent(window, "touchcancel", releaseBlockedTouch, {
+      capture: true,
+    });
 
     // ── Lock note: revert any mode switch that slips through ──────────────
     // If a mode switch reaches Obsidian despite the event interceptors, we
@@ -192,6 +229,7 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideRightSidebar)
       this.app.workspace.rightSplit.collapse();
     this.isZenActive = false;
+    this.blockedTouches.clear();
     this.removeBodyClasses();
     this.unmountFloatingButton();
     await this.restorePreviousMode();

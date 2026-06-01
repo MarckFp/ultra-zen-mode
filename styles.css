@@ -13,11 +13,23 @@ html body.uzm-hide-left-sidebar .sidebar-toggle-button.mod-left {
   display: none;
 }
 
+/* Prevent the hidden drawer from receiving touch events so that the     */
+/* swipe-to-open gesture cannot start even if it escapes the JS blocker. */
+html body.uzm-active.uzm-hide-left-sidebar .workspace-drawer.mod-left {
+  touch-action: none;
+  pointer-events: none;
+}
+
 /* ─── Right sidebar ────────────────────────────────────────────────── */
 html body.uzm-hide-right-sidebar .workspace-split.mod-right-split,
 html body.uzm-hide-right-sidebar .workspace-drawer.mod-right,
 html body.uzm-hide-right-sidebar .sidebar-toggle-button.mod-right {
   display: none;
+}
+
+html body.uzm-active.uzm-hide-right-sidebar .workspace-drawer.mod-right {
+  touch-action: none;
+  pointer-events: none;
 }
 
 /* ─── Note properties / frontmatter ───────────────────────────────── */
@@ -39,6 +51,22 @@ html body.uzm-hide-status-bar .mobile-navbar {
 
 /* ─── Tab bar ──────────────────────────────────────────────────────── */
 html body.uzm-hide-tab-bar .workspace-tab-header-container {
+  display: none;
+}
+
+/* Frameless window (Windows / Linux with custom frame): the tab-header  */
+/* container doubles as the titlebar drag area and is the element that   */
+/* Obsidian / Electron samples to set the window-control button colour.  */
+/* Keep it visible as an empty strip; hide only the tab content inside.  */
+html body.uzm-active.uzm-hide-tab-bar.is-frameless .workspace-tab-header-container {
+  display: block;
+  overflow: hidden;
+  min-height: unset;
+  height: var(--header-height, 2.5rem);
+  padding: 0;
+}
+html body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-container-inner {
   display: none;
 }
 
