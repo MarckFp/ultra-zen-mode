@@ -58,6 +58,8 @@ export default class UltraZenModePlugin extends Plugin {
   private blockedTouches = new Set<number>();
   /** Saved value of Obsidian's swipeToOpenDrawers config, restored on exit. */
   private savedSwipeDrawers: boolean | null = null;
+  /** MutationObservers watching drawer elements so they can be collapsed the moment Obsidian opens them. */
+  private drawerObservers: MutationObserver[] = [];
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -135,7 +137,12 @@ export default class UltraZenModePlugin extends Plugin {
           const blockedLeft = this.settings.hideLeftSidebar && x < edge;
           const blockedRight =
             this.settings.hideRightSidebar && x > window.innerWidth - edge;
-          if (blockedLeft || blockedRight) {
+          // Block swipe-up-from-bottom which triggers the mobile toolbar /
+          // command palette when the status bar / navbar is hidden.
+          const blockedBottom =
+            this.settings.hideStatusBar &&
+            touch.clientY > window.innerHeight - edge;
+          if (blockedLeft || blockedRight || blockedBottom) {
             this.blockedTouches.add(touch.identifier);
             e.stopPropagation();
             e.preventDefault();
@@ -257,15 +264,30 @@ export default class UltraZenModePlugin extends Plugin {
   private async enterZenMode(): Promise<void> {
     // Disable Obsidian's swipe-to-open drawers while in zen mode so Android
     // OS-level edge gestures no longer open hidden sidebars.
-    const vault = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+    const vault = this.app.vault as unknown as Record<
+      string,
+      (k: string, v?: unknown) => unknown
+    >;
     this.savedSwipeDrawers =
       (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
       null;
     vault["setConfig"]?.("swipeToOpenDrawers", false);
 
     this.isZenActive = true;
+    // Ensure drawers are collapsed before applying CSS so there is never a
+    // flash of an open sidebar becoming hidden.
+    if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
+    if (this.settings.hideRightSidebar)
+      this.app.workspace.rightSplit.collapse();
     this.applyBodyClasses();
     this.mountFloatingButton();
+    // Watch drawer DOM elements directly.  On Android the OS-level gesture
+    // opens the drawer outside the WebView's touch event flow, so the
+    // layout-change fallback may not fire in time.  A MutationObserver fires
+    // synchronously on the first microtask after any attribute mutation on the
+    // drawer element (Obsidian adds/removes is-open or modifies style), giving
+    // us the fastest possible reaction.
+    this.startWatchingDrawers();
     if (this.settings.switchToReadingMode) {
       await this.switchToReadingMode();
     }
@@ -274,10 +296,14 @@ export default class UltraZenModePlugin extends Plugin {
   private async exitZenMode(): Promise<void> {
     // Restore swipe-to-open drawers setting before anything else.
     if (this.savedSwipeDrawers !== null) {
-      const vault = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+      const vault = this.app.vault as unknown as Record<
+        string,
+        (k: string, v?: unknown) => unknown
+      >;
       vault["setConfig"]?.("swipeToOpenDrawers", this.savedSwipeDrawers);
       this.savedSwipeDrawers = null;
     }
+    this.stopWatchingDrawers();
     // Collapse sidebars while zen mode CSS is still fully active so the
     // collapse is completely invisible (sidebars are display:none at this point).
     if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
@@ -288,6 +314,45 @@ export default class UltraZenModePlugin extends Plugin {
     this.removeBodyClasses();
     this.unmountFloatingButton();
     await this.restorePreviousMode();
+  }
+
+  // ─── Drawer watcher ────────────────────────────────────────────────────
+
+  /** Begin observing each visible drawer element for attribute mutations.
+   *  When Obsidian's internal gesture handler opens a drawer (by toggling a
+   *  class or inline style) the observer fires and immediately collapses it,
+   *  correcting the internal layout state before the next paint. */
+  private startWatchingDrawers(): void {
+    const pairs = [
+      {
+        sel: ".workspace-drawer.mod-left",
+        getSplit: () => this.app.workspace.leftSplit,
+        enabled: this.settings.hideLeftSidebar,
+      },
+      {
+        sel: ".workspace-drawer.mod-right",
+        getSplit: () => this.app.workspace.rightSplit,
+        enabled: this.settings.hideRightSidebar,
+      },
+    ] as const;
+
+    for (const { sel, getSplit, enabled } of pairs) {
+      if (!enabled) continue;
+      const el = document.querySelector(sel);
+      if (!el) continue;
+      const obs = new MutationObserver(() => {
+        if (!this.isZenActive) return;
+        const split = getSplit();
+        if (!split.collapsed) split.collapse();
+      });
+      obs.observe(el, { attributes: true, childList: false, subtree: false });
+      this.drawerObservers.push(obs);
+    }
+  }
+
+  private stopWatchingDrawers(): void {
+    for (const obs of this.drawerObservers) obs.disconnect();
+    this.drawerObservers = [];
   }
 
   // ─── Reading mode helpers ───────────────────────────────────────────────

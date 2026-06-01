@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.12.0] – 2026-06-01
+
+- Added functionality to observe drawer elements and collapse them when opened during Zen mode.
+- Changed touch event handling to block swipe-up gestures from triggering the mobile toolbar when the status bar is hidden.
+- Improved the handling of swipe-to-open drawers by restoring the setting upon exiting Zen mode.
 ## [1.11.0] – 2026-06-01
 
 - Added option to exit zen mode when the active note is closed
