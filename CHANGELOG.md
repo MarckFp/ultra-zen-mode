@@ -8,6 +8,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.11.0] – 2026-06-01
+
+- Added option to exit zen mode when the active note is closed
+- Changed opacity of the workspace drawer backdrop to 0.55
+- Changed opacity of the zen mode exit button to 0.8
 ## [1.10.0] – 2026-06-01
 
 - Added event handler to enforce sidebar state during zen mode, collapsing any opened sidebars if configured to hide them.

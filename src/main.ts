@@ -13,6 +13,7 @@ interface UltraZenModeSettings {
   hideTabBar: boolean;
   switchToReadingMode: boolean;
   lockNote: boolean;
+  exitOnNoteClose: boolean;
   headerPadding: HeaderPadding;
 }
 
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   hideTabBar: true,
   switchToReadingMode: true,
   lockNote: true,
+  exitOnNoteClose: true,
   headerPadding: "medium",
 };
 
@@ -54,6 +56,8 @@ export default class UltraZenModePlugin extends Plugin {
   private previousMode: "source" | "preview" | null = null;
   /** Touch identifiers that started within a hidden sidebar edge — suppressed for their full lifetime. */
   private blockedTouches = new Set<number>();
+  /** Saved value of Obsidian's swipeToOpenDrawers config, restored on exit. */
+  private savedSwipeDrawers: boolean | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -198,6 +202,17 @@ export default class UltraZenModePlugin extends Plugin {
       }),
     );
 
+    // ── Exit zen mode when the active note is closed ───────────────────────
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", () => {
+        if (!this.isZenActive || !this.settings.exitOnNoteClose) return;
+        // Exit if no markdown note is active (tab closed / navigated away)
+        if (!this.app.workspace.getActiveViewOfType(MarkdownView)) {
+          void this.exitZenMode();
+        }
+      }),
+    );
+
     // ── Lock note: revert any mode switch that slips through ──────────────
     // If a mode switch reaches Obsidian despite the event interceptors, we
     // immediately blank the view (uzm-reverting) so the user sees nothing,
@@ -240,6 +255,14 @@ export default class UltraZenModePlugin extends Plugin {
   // ─── Enter / Exit ───────────────────────────────────────────────────────
 
   private async enterZenMode(): Promise<void> {
+    // Disable Obsidian's swipe-to-open drawers while in zen mode so Android
+    // OS-level edge gestures no longer open hidden sidebars.
+    const vault = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+    this.savedSwipeDrawers =
+      (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
+      null;
+    vault["setConfig"]?.("swipeToOpenDrawers", false);
+
     this.isZenActive = true;
     this.applyBodyClasses();
     this.mountFloatingButton();
@@ -249,6 +272,12 @@ export default class UltraZenModePlugin extends Plugin {
   }
 
   private async exitZenMode(): Promise<void> {
+    // Restore swipe-to-open drawers setting before anything else.
+    if (this.savedSwipeDrawers !== null) {
+      const vault = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+      vault["setConfig"]?.("swipeToOpenDrawers", this.savedSwipeDrawers);
+      this.savedSwipeDrawers = null;
+    }
     // Collapse sidebars while zen mode CSS is still fully active so the
     // collapse is completely invisible (sidebars are display:none at this point).
     if (this.settings.hideLeftSidebar) this.app.workspace.leftSplit.collapse();
@@ -445,6 +474,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Lock note (prevent editing)",
       "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active.",
       "lockNote",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Exit zen mode on note close",
+      "Automatically exits zen mode when the active note is closed or navigated away from.",
+      "exitOnNoteClose",
       save,
     );
 

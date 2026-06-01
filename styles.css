@@ -151,7 +151,7 @@ html body.uzm-active .workspace-drawer-backdrop {
   -webkit-backdrop-filter: blur(10px);
 
   /* Subtle by default, visible on hover */
-  opacity: 0.3;
+  opacity: 0.55;
   cursor: pointer;
   transition:
     opacity 0.25s ease,
@@ -192,6 +192,6 @@ html body.uzm-active .workspace-drawer-backdrop {
   .uzm-exit-btn {
     width: 3.25rem;
     height: 3.25rem;
-    opacity: 0.65;
+    opacity: 0.8;
   }
 }
