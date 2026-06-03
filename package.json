@@ -1,6 +1,6 @@
 {
   "name": "ultra-zen-mode",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "description": "Obsidian plugin – distraction-free zen reading/writing mode",
   "main": "main.js",
   "scripts": {

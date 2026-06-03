@@ -8,6 +8,9 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.15.0] – 2026-06-03
+
+- Added functionality to save and restore the collapsed states of the left and right sidebars when entering and exiting Zen mode.
 ## [1.14.0] – 2026-06-01
 
 - Changed sidebar visibility settings to a single option for both left and right sidebars.

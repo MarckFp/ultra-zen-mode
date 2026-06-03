@@ -59,6 +59,9 @@ export default class UltraZenModePlugin extends Plugin {
   private previousMode: "source" | "preview" | null = null;
   /** Saved value of Obsidian's swipeToOpenDrawers config, restored on exit. */
   private savedSwipeDrawers: boolean | null = null;
+  /** Sidebar collapsed states before zen mode, restored on exit. */
+  private savedLeftCollapsed: boolean | null = null;
+  private savedRightCollapsed: boolean | null = null;
   /** MutationObservers watching drawer elements so they can be collapsed the moment Obsidian opens them. */
   private drawerObservers: MutationObserver[] = [];
 
@@ -200,6 +203,8 @@ export default class UltraZenModePlugin extends Plugin {
 
     this.isZenActive = true;
     if (this.settings.hideSidebars) {
+      this.savedLeftCollapsed = this.app.workspace.leftSplit.collapsed;
+      this.savedRightCollapsed = this.app.workspace.rightSplit.collapsed;
       this.app.workspace.leftSplit.collapse();
       this.app.workspace.rightSplit.collapse();
     }
@@ -229,6 +234,10 @@ export default class UltraZenModePlugin extends Plugin {
     this.isZenActive = false;
     this.removeBodyClasses();
     this.unmountFloatingButton();
+    if (this.savedLeftCollapsed === false) this.app.workspace.leftSplit.toggle();
+    if (this.savedRightCollapsed === false) this.app.workspace.rightSplit.toggle();
+    this.savedLeftCollapsed = null;
+    this.savedRightCollapsed = null;
     await this.restorePreviousMode();
   }
 
