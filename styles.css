@@ -57,6 +57,15 @@ html
   display: none;
 }
 
+/* ─── Bases toolbar (.base view name, sorting, filters, ordering) ──── */
+/* The toolbar sits inside a .bases-header band; hiding only the toolbar */
+/* leaves that band's height behind as a gap, so hide the whole header.  */
+/* .bases-toolbar is kept as a fallback for layouts without the wrapper. */
+html body.uzm-active.uzm-hide-base-toolbar .bases-header,
+html body.uzm-active.uzm-hide-base-toolbar .bases-toolbar {
+  display: none;
+}
+
 /* ─── View action buttons (edit toggle, ⋮ more options) ───────────── */
 /* Always hidden in zen mode — reading needs no toolbar clutter.       */
 html body.uzm-active .view-actions {

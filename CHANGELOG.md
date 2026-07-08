@@ -8,6 +8,8 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+- Added "Hide Bases toolbar" option to hide the toolbar at the top of a `.base` file view (view name, sorting, filters, ordering, etc.).
+
 ## [1.15.0] – 2026-06-03
 
 - Added functionality to save and restore the collapsed states of the left and right sidebars when entering and exiting Zen mode.

@@ -10,6 +10,7 @@ interface UltraZenModeSettings {
   hideNoteTitle: boolean;
   hideStatusBar: boolean;
   hideTabBar: boolean;
+  hideBaseToolbar: boolean;
   switchToReadingMode: boolean;
   lockNote: boolean;
   exitOnNoteClose: boolean;
@@ -22,6 +23,7 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   hideNoteTitle: false,
   hideStatusBar: true,
   hideTabBar: true,
+  hideBaseToolbar: true,
   switchToReadingMode: true,
   lockNote: true,
   exitOnNoteClose: true,
@@ -43,6 +45,7 @@ const CLS = {
   hideNoteTitle: "uzm-hide-note-title",
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
+  hideBaseToolbar: "uzm-hide-base-toolbar",
   lockNote: "uzm-lock-note",
   reverting: "uzm-reverting",
   headerSmall: "uzm-header-small",
@@ -299,6 +302,7 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideNoteTitle) classList.add(CLS.hideNoteTitle);
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
+    if (this.settings.hideBaseToolbar) classList.add(CLS.hideBaseToolbar);
     if (this.settings.lockNote) classList.add(CLS.lockNote);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
@@ -419,6 +423,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Hide tab bar",
       "Hides the editor tab bar.",
       "hideTabBar",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Hide Bases toolbar",
+      "Hides the toolbar at the top of a .base file view (view name, sorting, filters, etc.).",
+      "hideBaseToolbar",
       save,
     );
 
