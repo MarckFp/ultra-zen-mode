@@ -8,6 +8,8 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+- Added "Full screen on activation" option to automatically enter full screen when zen mode is activated and leave it on exit.
+
 ## [1.15.0] – 2026-06-03
 
 - Added functionality to save and restore the collapsed states of the left and right sidebars when entering and exiting Zen mode.
