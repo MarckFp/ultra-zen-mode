@@ -8,6 +8,7 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+- Added "Full screen on activation" option to automatically enter full screen when zen mode is activated and leave it on exit.
 - Added "Hide header bar" option to hide the view header — the note title and the back/forward navigation buttons shown on desktop.
 - Added "Hide PDF toolbar" option to hide the PDF viewer toolbar (zoom, page navigation, etc.) while reading a PDF.
 

@@ -15,6 +15,7 @@ interface UltraZenModeSettings {
   switchToReadingMode: boolean;
   lockNote: boolean;
   exitOnNoteClose: boolean;
+  fullScreenOnActivate: boolean;
   headerPadding: HeaderPadding;
 }
 
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   switchToReadingMode: true,
   lockNote: true,
   exitOnNoteClose: true,
+  fullScreenOnActivate: false,
   headerPadding: "medium",
 };
 
@@ -70,6 +72,8 @@ export default class UltraZenModePlugin extends Plugin {
   private savedRightCollapsed: boolean | null = null;
   /** MutationObservers watching drawer elements so they can be collapsed the moment Obsidian opens them. */
   private drawerObservers: MutationObserver[] = [];
+  /** True when we requested full screen on activation, so we only exit the full screen we ourselves entered. */
+  private enteredFullScreen = false;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -217,6 +221,8 @@ export default class UltraZenModePlugin extends Plugin {
     this.applyBodyClasses();
     this.mountFloatingButton();
     this.startWatchingDrawers();
+    // Request full screen while still inside the toggle's user gesture.
+    if (this.settings.fullScreenOnActivate) this.enterFullScreen();
     if (this.settings.switchToReadingMode) {
       await this.switchToReadingMode();
     }
@@ -233,6 +239,7 @@ export default class UltraZenModePlugin extends Plugin {
     }
     document.body.removeAttribute("data-ignore-swipe");
     this.stopWatchingDrawers();
+    this.exitFullScreen();
     if (this.settings.hideSidebars) {
       this.app.workspace.leftSplit.collapse();
       this.app.workspace.rightSplit.collapse();
@@ -270,6 +277,24 @@ export default class UltraZenModePlugin extends Plugin {
   private stopWatchingDrawers(): void {
     for (const obs of this.drawerObservers) obs.disconnect();
     this.drawerObservers = [];
+  }
+
+  // ─── Full screen helpers ────────────────────────────────────────────────
+
+  private enterFullScreen(): void {
+    const el = document.documentElement;
+    if (document.fullscreenElement || !el.requestFullscreen) return;
+    this.enteredFullScreen = true;
+    el.requestFullscreen().catch(() => {
+      this.enteredFullScreen = false;
+    });
+  }
+
+  private exitFullScreen(): void {
+    if (this.enteredFullScreen && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    }
+    this.enteredFullScreen = false;
   }
 
   // ─── Reading mode helpers ───────────────────────────────────────────────
@@ -467,6 +492,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Exit zen mode on note close",
       "Automatically exits zen mode when the active note is closed or navigated away from.",
       "exitOnNoteClose",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Full screen on activation",
+      "Automatically enters full screen when zen mode is activated, and leaves it on exit.",
+      "fullScreenOnActivate",
       save,
     );
 
