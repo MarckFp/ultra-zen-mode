@@ -129,6 +129,18 @@ html body.uzm-active .workspace-drawer-backdrop {
   pointer-events: none;
 }
 
+/* ─── Hide other open documents (non-active leaves in the root split) ── */
+html body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-leaf:not(.mod-active) {
+  display: none;
+}
+html body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  > .workspace-leaf-resize-handle {
+  display: none;
+}
+
 /* ─── Floating exit button ─────────────────────────────────────────── */
 .uzm-exit-btn {
   /* Always visible, fixed to bottom-right of the viewport.             */

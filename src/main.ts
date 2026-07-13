@@ -18,6 +18,9 @@ interface UltraZenModeSettings {
   exitOnNoteClose: boolean;
   fullScreenOnActivate: boolean;
   headerPadding: HeaderPadding;
+  zenTheme: string;
+  hideOpenDocuments: boolean;
+  limitLineLength: boolean;
 }
 
 const DEFAULT_SETTINGS: UltraZenModeSettings = {
@@ -34,6 +37,9 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   exitOnNoteClose: true,
   fullScreenOnActivate: false,
   headerPadding: "medium",
+  zenTheme: "",
+  hideOpenDocuments: false,
+  limitLineLength: true,
 };
 
 type BooleanSettingKey = {
@@ -58,6 +64,7 @@ const CLS = {
   reverting: "uzm-reverting",
   headerSmall: "uzm-header-small",
   headerMedium: "uzm-header-medium",
+  hideOpenDocuments: "uzm-hide-open-documents",
 } as const;
 
 // ─── Plugin ───────────────────────────────────────────────────────────────
@@ -77,6 +84,10 @@ export default class UltraZenModePlugin extends Plugin {
   private drawerObservers: MutationObserver[] = [];
   /** True when we requested full screen on activation, so we only exit the full screen we ourselves entered. */
   private enteredFullScreen = false;
+  /** Theme active before zen mode, restored on exit. */
+  private savedTheme: string | null = null;
+  /** Obsidian's readableLineLength config value before zen mode, restored on exit. */
+  private savedReadableLineLength: boolean | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -214,6 +225,27 @@ export default class UltraZenModePlugin extends Plugin {
       document.body.setAttribute("data-ignore-swipe", "true");
     }
 
+    // ── Zen theme ─────────────────────────────────────────────────────────
+    if (this.settings.zenTheme !== "") {
+      const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
+      this.savedTheme = (customCss?.["theme"] as string) ?? "";
+      try {
+        await (customCss?.["setTheme"] as ((name: string) => Promise<void>) | undefined)?.(this.settings.zenTheme);
+      } catch {
+        this.savedTheme = null;
+      }
+    }
+
+    // ── Readable line length ──────────────────────────────────────────────
+    const vaultCfg = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+    this.savedReadableLineLength = (vaultCfg["getConfig"]?.("readableLineLength") as boolean | undefined) ?? null;
+    vaultCfg["setConfig"]?.("readableLineLength", this.settings.limitLineLength);
+    if (this.settings.limitLineLength) {
+      document.body.classList.add("is-readable-line-width");
+    } else {
+      document.body.classList.remove("is-readable-line-width");
+    }
+
     this.isZenActive = true;
     if (this.settings.hideSidebars) {
       this.savedLeftCollapsed = this.app.workspace.leftSplit.collapsed;
@@ -241,6 +273,28 @@ export default class UltraZenModePlugin extends Plugin {
       this.savedSwipeDrawers = null;
     }
     document.body.removeAttribute("data-ignore-swipe");
+
+    // ── Restore zen theme ─────────────────────────────────────────────────
+    if (this.savedTheme !== null) {
+      const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
+      try {
+        await (customCss?.["setTheme"] as ((name: string) => Promise<void>) | undefined)?.(this.savedTheme);
+      } catch {}
+      this.savedTheme = null;
+    }
+
+    // ── Restore readable line length ──────────────────────────────────────
+    if (this.savedReadableLineLength !== null) {
+      const vaultCfg = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
+      vaultCfg["setConfig"]?.("readableLineLength", this.savedReadableLineLength);
+      if (this.savedReadableLineLength) {
+        document.body.classList.add("is-readable-line-width");
+      } else {
+        document.body.classList.remove("is-readable-line-width");
+      }
+      this.savedReadableLineLength = null;
+    }
+
     this.stopWatchingDrawers();
     this.exitFullScreen();
     if (this.settings.hideSidebars) {
@@ -250,8 +304,10 @@ export default class UltraZenModePlugin extends Plugin {
     this.isZenActive = false;
     this.removeBodyClasses();
     this.unmountFloatingButton();
-    if (this.savedLeftCollapsed === false) this.app.workspace.leftSplit.toggle();
-    if (this.savedRightCollapsed === false) this.app.workspace.rightSplit.toggle();
+    if (this.savedLeftCollapsed === false)
+      this.app.workspace.leftSplit.toggle();
+    if (this.savedRightCollapsed === false)
+      this.app.workspace.rightSplit.toggle();
     this.savedLeftCollapsed = null;
     this.savedRightCollapsed = null;
     await this.restorePreviousMode();
@@ -337,6 +393,7 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideViewHeader) classList.add(CLS.hideViewHeader);
     if (this.settings.hidePdfToolbar) classList.add(CLS.hidePdfToolbar);
     if (this.settings.lockNote) classList.add(CLS.lockNote);
+    if (this.settings.hideOpenDocuments) classList.add(CLS.hideOpenDocuments);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
       classList.add(CLS.headerMedium);
@@ -419,6 +476,23 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       await this.plugin.saveSettings();
     };
 
+    // ── Zen theme ──────────────────────────────────────────────────────
+    const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
+    const installedThemes = Object.keys((customCss?.["themes"] as Record<string, unknown>) ?? {});
+    new Setting(containerEl)
+      .setName("Zen theme")
+      .setDesc(
+        "Theme to switch to when entering zen mode. \u201cDefault (current theme)\u201d keeps whatever is currently active.",
+      )
+      .addDropdown((dd) => {
+        dd.addOption("", "Default (current theme)");
+        for (const name of installedThemes) dd.addOption(name, name);
+        dd.setValue(this.plugin.settings.zenTheme).onChange(async (value) => {
+          this.plugin.settings.zenTheme = value;
+          await this.plugin.saveSettings();
+        });
+      });
+
     this.addToggle(
       containerEl,
       "Hide sidebars and command palette",
@@ -456,6 +530,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Hide tab bar",
       "Hides the editor tab bar.",
       "hideTabBar",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Hide other open documents",
+      "Hides all inactive panes/splits so only the focused document is visible in zen mode.",
+      "hideOpenDocuments",
       save,
     );
 
@@ -512,6 +594,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Full screen on activation",
       "Automatically enters full screen when zen mode is activated, and leaves it on exit.",
       "fullScreenOnActivate",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Limit line length",
+      "Enforces readable line length in zen mode when on, or stretches text to full editor width when off.",
+      "limitLineLength",
       save,
     );
 
