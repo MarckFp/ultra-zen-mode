@@ -10,6 +10,8 @@ interface UltraZenModeSettings {
   hideNoteTitle: boolean;
   hideStatusBar: boolean;
   hideTabBar: boolean;
+  hideViewHeader: boolean;
+  hidePdfToolbar: boolean;
   switchToReadingMode: boolean;
   lockNote: boolean;
   exitOnNoteClose: boolean;
@@ -22,6 +24,8 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   hideNoteTitle: false,
   hideStatusBar: true,
   hideTabBar: true,
+  hideViewHeader: true,
+  hidePdfToolbar: true,
   switchToReadingMode: true,
   lockNote: true,
   exitOnNoteClose: true,
@@ -43,6 +47,8 @@ const CLS = {
   hideNoteTitle: "uzm-hide-note-title",
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
+  hideViewHeader: "uzm-hide-view-header",
+  hidePdfToolbar: "uzm-hide-pdf-toolbar",
   lockNote: "uzm-lock-note",
   reverting: "uzm-reverting",
   headerSmall: "uzm-header-small",
@@ -299,6 +305,8 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideNoteTitle) classList.add(CLS.hideNoteTitle);
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
+    if (this.settings.hideViewHeader) classList.add(CLS.hideViewHeader);
+    if (this.settings.hidePdfToolbar) classList.add(CLS.hidePdfToolbar);
     if (this.settings.lockNote) classList.add(CLS.lockNote);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
@@ -419,6 +427,22 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Hide tab bar",
       "Hides the editor tab bar.",
       "hideTabBar",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Hide header bar",
+      "Hides the view header bar — the note title and the back/forward navigation buttons shown on desktop.",
+      "hideViewHeader",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Hide PDF toolbar",
+      "Hides the top toolbar (zoom, page navigation, etc.) shown when reading a PDF.",
+      "hidePdfToolbar",
       save,
     );
 

@@ -8,6 +8,9 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+- Added "Hide header bar" option to hide the view header — the note title and the back/forward navigation buttons shown on desktop.
+- Added "Hide PDF toolbar" option to hide the PDF viewer toolbar (zoom, page navigation, etc.) while reading a PDF.
+
 ## [1.15.0] – 2026-06-03
 
 - Added functionality to save and restore the collapsed states of the left and right sidebars when entering and exiting Zen mode.
