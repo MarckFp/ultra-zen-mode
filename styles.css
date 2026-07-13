@@ -57,6 +57,19 @@ html
   display: none;
 }
 
+/* ─── Header bar (title + back/forward nav buttons, desktop) ─────── */
+/* Fully hides the per-view header. On frameless windows the titlebar   */
+/* drag area lives in the tab-header strip (handled above), not here,   */
+/* so removing the view header does not affect window controls.         */
+html body.uzm-active.uzm-hide-view-header .view-header {
+  display: none;
+}
+
+/* ─── PDF viewer toolbar (zoom, page navigation, etc.) ────────────── */
+html body.uzm-active.uzm-hide-pdf-toolbar .pdf-toolbar {
+  display: none;
+}
+
 /* ─── View action buttons (edit toggle, ⋮ more options) ───────────── */
 /* Always hidden in zen mode — reading needs no toolbar clutter.       */
 html body.uzm-active .view-actions {
