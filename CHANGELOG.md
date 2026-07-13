@@ -10,6 +10,11 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [1.17.0] – 2026-07-13
 
+- Added a new settings interface for customizing zen mode options including theme selection and various display toggles.
+- Introduced options to hide sidebars, note properties, titles, and other UI elements in zen mode.
+- Added functionality to switch to reading mode and lock notes while in zen mode.
+## [1.17.0] – 2026-07-13
+
 - Added support for custom themes in Zen mode
 - Improved handling of readable line length settings
 - Updated CSS to hide the header bar in Zen mode

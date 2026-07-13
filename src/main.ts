@@ -493,6 +493,124 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
+  // ─── Obsidian 1.13.0+: declarative settings API ──────────────────────
+  // On 1.13.0+, Obsidian calls this method and skips display().
+  // Controls with `control` bindings are read, saved, and search-indexed
+  // automatically. The zen-theme entry uses a `render` callback because
+  // its dropdown options are dynamic (populated from installed themes at
+  // render time); Obsidian cannot infer them statically.
+  getSettingDefinitions() {
+    const customCss = (
+      this.app as unknown as Record<string, Record<string, unknown>>
+    )["customCss"];
+    const installedThemes = Object.keys(
+      (customCss?.["themes"] as Record<string, unknown>) ?? {},
+    );
+
+    return [
+      {
+        name: "Zen theme",
+        desc: "Theme to switch to when entering zen mode. \u201cDefault (current theme)\u201d keeps whatever is currently active.",
+        render: (setting: Setting) => {
+          setting.addDropdown((dd) => {
+            dd.addOption("", "Default (current theme)");
+            for (const name of installedThemes) dd.addOption(name, name);
+            dd.setValue(this.plugin.settings.zenTheme).onChange(
+              async (value) => {
+                this.plugin.settings.zenTheme = value;
+                await this.plugin.saveSettings();
+              },
+            );
+          });
+        },
+      },
+      {
+        name: "Hide sidebars and command palette",
+        desc: "Hides both sidebars, the ribbon, and blocks swipe gestures that open them or the command palette.",
+        control: { type: "toggle", key: "hideSidebars" },
+      },
+      {
+        name: "Hide note properties",
+        desc: "Hides the YAML frontmatter / properties block.",
+        control: { type: "toggle", key: "hideProperties" },
+      },
+      {
+        name: "Hide note title",
+        desc: "Hides the inline note title at the top of the editor.",
+        control: { type: "toggle", key: "hideNoteTitle" },
+      },
+      {
+        name: "Hide status bar",
+        desc: "Hides the bottom status bar.",
+        control: { type: "toggle", key: "hideStatusBar" },
+      },
+      {
+        name: "Hide tab bar",
+        desc: "Hides the editor tab bar.",
+        control: { type: "toggle", key: "hideTabBar" },
+      },
+      {
+        name: "Hide other open documents",
+        desc: "Hides all inactive panes/splits so only the focused document is visible in zen mode.",
+        control: { type: "toggle", key: "hideOpenDocuments" },
+      },
+      {
+        name: "Hide Bases toolbar",
+        desc: "Hides the toolbar at the top of a .base file view (view name, sorting, filters, etc.).",
+        control: { type: "toggle", key: "hideBaseToolbar" },
+      },
+      {
+        name: "Hide header bar",
+        desc: "Hides the view header bar \u2014 the note title and the back/forward navigation buttons shown on desktop.",
+        control: { type: "toggle", key: "hideViewHeader" },
+      },
+      {
+        name: "Hide PDF toolbar",
+        desc: "Hides the top toolbar (zoom, page navigation, etc.) shown when reading a PDF.",
+        control: { type: "toggle", key: "hidePdfToolbar" },
+      },
+      {
+        name: "Switch to reading mode",
+        desc: "Automatically enters reading view on activation and restores the previous mode on exit.",
+        control: { type: "toggle", key: "switchToReadingMode" },
+      },
+      {
+        name: "Lock note (prevent editing)",
+        desc: "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active.",
+        control: { type: "toggle", key: "lockNote" },
+      },
+      {
+        name: "Exit zen mode on note close",
+        desc: "Automatically exits zen mode when the active note is closed or navigated away from.",
+        control: { type: "toggle", key: "exitOnNoteClose" },
+      },
+      {
+        name: "Full screen on activation",
+        desc: "Automatically enters full screen when zen mode is activated, and leaves it on exit.",
+        control: { type: "toggle", key: "fullScreenOnActivate" },
+      },
+      {
+        name: "Limit line length",
+        desc: "Enforces readable line length in zen mode when on, or stretches text to full editor width when off.",
+        control: { type: "toggle", key: "limitLineLength" },
+      },
+      {
+        name: "Header bar padding",
+        desc: "Height of the top bar left behind after action buttons are hidden.",
+        control: {
+          type: "dropdown",
+          key: "headerPadding",
+          defaultValue: "medium",
+          options: { small: "Small", medium: "Medium", original: "Original" },
+        },
+      },
+    ];
+  }
+
+  // ─── Obsidian < 1.13.0: imperative fallback ───────────────────────────
+  // Kept in sync with getSettingDefinitions(). When the user base on older
+  // Obsidian versions is small enough, delete this method and bump
+  // minAppVersion to "1.13.0".
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
