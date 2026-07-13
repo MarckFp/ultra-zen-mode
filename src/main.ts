@@ -227,19 +227,33 @@ export default class UltraZenModePlugin extends Plugin {
 
     // ── Zen theme ─────────────────────────────────────────────────────────
     if (this.settings.zenTheme !== "") {
-      const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
+      const customCss = (
+        this.app as unknown as Record<string, Record<string, unknown>>
+      )["customCss"];
       this.savedTheme = (customCss?.["theme"] as string) ?? "";
       try {
-        await (customCss?.["setTheme"] as ((name: string) => Promise<void>) | undefined)?.(this.settings.zenTheme);
+        await (
+          customCss?.["setTheme"] as
+            | ((name: string) => Promise<void>)
+            | undefined
+        )?.(this.settings.zenTheme);
       } catch {
         this.savedTheme = null;
       }
     }
 
     // ── Readable line length ──────────────────────────────────────────────
-    const vaultCfg = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
-    this.savedReadableLineLength = (vaultCfg["getConfig"]?.("readableLineLength") as boolean | undefined) ?? null;
-    vaultCfg["setConfig"]?.("readableLineLength", this.settings.limitLineLength);
+    const vaultCfg = this.app.vault as unknown as Record<
+      string,
+      (k: string, v?: unknown) => unknown
+    >;
+    this.savedReadableLineLength =
+      (vaultCfg["getConfig"]?.("readableLineLength") as boolean | undefined) ??
+      null;
+    vaultCfg["setConfig"]?.(
+      "readableLineLength",
+      this.settings.limitLineLength,
+    );
     if (this.settings.limitLineLength) {
       document.body.classList.add("is-readable-line-width");
     } else {
@@ -276,17 +290,29 @@ export default class UltraZenModePlugin extends Plugin {
 
     // ── Restore zen theme ─────────────────────────────────────────────────
     if (this.savedTheme !== null) {
-      const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
+      const customCss = (
+        this.app as unknown as Record<string, Record<string, unknown>>
+      )["customCss"];
       try {
-        await (customCss?.["setTheme"] as ((name: string) => Promise<void>) | undefined)?.(this.savedTheme);
+        await (
+          customCss?.["setTheme"] as
+            | ((name: string) => Promise<void>)
+            | undefined
+        )?.(this.savedTheme);
       } catch {}
       this.savedTheme = null;
     }
 
     // ── Restore readable line length ──────────────────────────────────────
     if (this.savedReadableLineLength !== null) {
-      const vaultCfg = this.app.vault as unknown as Record<string, (k: string, v?: unknown) => unknown>;
-      vaultCfg["setConfig"]?.("readableLineLength", this.savedReadableLineLength);
+      const vaultCfg = this.app.vault as unknown as Record<
+        string,
+        (k: string, v?: unknown) => unknown
+      >;
+      vaultCfg["setConfig"]?.(
+        "readableLineLength",
+        this.savedReadableLineLength,
+      );
       if (this.savedReadableLineLength) {
         document.body.classList.add("is-readable-line-width");
       } else {
@@ -477,8 +503,12 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     };
 
     // ── Zen theme ──────────────────────────────────────────────────────
-    const customCss = (this.app as unknown as Record<string, Record<string, unknown>>)["customCss"];
-    const installedThemes = Object.keys((customCss?.["themes"] as Record<string, unknown>) ?? {});
+    const customCss = (
+      this.app as unknown as Record<string, Record<string, unknown>>
+    )["customCss"];
+    const installedThemes = Object.keys(
+      (customCss?.["themes"] as Record<string, unknown>) ?? {},
+    );
     new Setting(containerEl)
       .setName("Zen theme")
       .setDesc(

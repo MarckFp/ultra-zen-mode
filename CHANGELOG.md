@@ -10,6 +10,12 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [1.17.0] – 2026-07-13
 
+- Added support for custom themes in Zen mode
+- Improved handling of readable line length settings
+- Updated CSS to hide the header bar in Zen mode
+- Enhanced CSS for hiding non-active documents in Zen mode
+## [1.17.0] – 2026-07-13
+
 - Added zenTheme setting to customize the theme in zen mode.
 - Added hideOpenDocuments setting to hide open documents in zen mode.
 - Added limitLineLength setting to control line length in zen mode.

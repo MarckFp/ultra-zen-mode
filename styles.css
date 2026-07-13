@@ -63,6 +63,9 @@ html
 /* .bases-toolbar is kept as a fallback for layouts without the wrapper. */
 html body.uzm-active.uzm-hide-base-toolbar .bases-header,
 html body.uzm-active.uzm-hide-base-toolbar .bases-toolbar {
+  display: none;
+}
+
 /* ─── Header bar (title + back/forward nav buttons, desktop) ─────── */
 /* Fully hides the per-view header. On frameless windows the titlebar   */
 /* drag area lives in the tab-header strip (handled above), not here,   */
@@ -130,12 +133,14 @@ html body.uzm-active .workspace-drawer-backdrop {
 }
 
 /* ─── Hide other open documents (non-active leaves in the root split) ── */
-html body.uzm-active.uzm-hide-open-documents
+html
+  body.uzm-active.uzm-hide-open-documents
   .workspace-split.mod-root
   .workspace-leaf:not(.mod-active) {
   display: none;
 }
-html body.uzm-active.uzm-hide-open-documents
+html
+  body.uzm-active.uzm-hide-open-documents
   .workspace-split.mod-root
   > .workspace-leaf-resize-handle {
   display: none;
