@@ -11,9 +11,12 @@ interface UltraZenModeSettings {
   hideStatusBar: boolean;
   hideTabBar: boolean;
   hideBaseToolbar: boolean;
+  hideViewHeader: boolean;
+  hidePdfToolbar: boolean;
   switchToReadingMode: boolean;
   lockNote: boolean;
   exitOnNoteClose: boolean;
+  fullScreenOnActivate: boolean;
   headerPadding: HeaderPadding;
 }
 
@@ -24,9 +27,12 @@ const DEFAULT_SETTINGS: UltraZenModeSettings = {
   hideStatusBar: true,
   hideTabBar: true,
   hideBaseToolbar: true,
+  hideViewHeader: true,
+  hidePdfToolbar: true,
   switchToReadingMode: true,
   lockNote: true,
   exitOnNoteClose: true,
+  fullScreenOnActivate: false,
   headerPadding: "medium",
 };
 
@@ -46,6 +52,8 @@ const CLS = {
   hideStatusBar: "uzm-hide-status-bar",
   hideTabBar: "uzm-hide-tab-bar",
   hideBaseToolbar: "uzm-hide-base-toolbar",
+  hideViewHeader: "uzm-hide-view-header",
+  hidePdfToolbar: "uzm-hide-pdf-toolbar",
   lockNote: "uzm-lock-note",
   reverting: "uzm-reverting",
   headerSmall: "uzm-header-small",
@@ -67,6 +75,8 @@ export default class UltraZenModePlugin extends Plugin {
   private savedRightCollapsed: boolean | null = null;
   /** MutationObservers watching drawer elements so they can be collapsed the moment Obsidian opens them. */
   private drawerObservers: MutationObserver[] = [];
+  /** True when we requested full screen on activation, so we only exit the full screen we ourselves entered. */
+  private enteredFullScreen = false;
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -214,6 +224,8 @@ export default class UltraZenModePlugin extends Plugin {
     this.applyBodyClasses();
     this.mountFloatingButton();
     this.startWatchingDrawers();
+    // Request full screen while still inside the toggle's user gesture.
+    if (this.settings.fullScreenOnActivate) this.enterFullScreen();
     if (this.settings.switchToReadingMode) {
       await this.switchToReadingMode();
     }
@@ -230,6 +242,7 @@ export default class UltraZenModePlugin extends Plugin {
     }
     document.body.removeAttribute("data-ignore-swipe");
     this.stopWatchingDrawers();
+    this.exitFullScreen();
     if (this.settings.hideSidebars) {
       this.app.workspace.leftSplit.collapse();
       this.app.workspace.rightSplit.collapse();
@@ -269,6 +282,24 @@ export default class UltraZenModePlugin extends Plugin {
     this.drawerObservers = [];
   }
 
+  // ─── Full screen helpers ────────────────────────────────────────────────
+
+  private enterFullScreen(): void {
+    const el = document.documentElement;
+    if (document.fullscreenElement || !el.requestFullscreen) return;
+    this.enteredFullScreen = true;
+    el.requestFullscreen().catch(() => {
+      this.enteredFullScreen = false;
+    });
+  }
+
+  private exitFullScreen(): void {
+    if (this.enteredFullScreen && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+    }
+    this.enteredFullScreen = false;
+  }
+
   // ─── Reading mode helpers ───────────────────────────────────────────────
 
   private async switchToReadingMode(): Promise<void> {
@@ -303,6 +334,8 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideStatusBar) classList.add(CLS.hideStatusBar);
     if (this.settings.hideTabBar) classList.add(CLS.hideTabBar);
     if (this.settings.hideBaseToolbar) classList.add(CLS.hideBaseToolbar);
+    if (this.settings.hideViewHeader) classList.add(CLS.hideViewHeader);
+    if (this.settings.hidePdfToolbar) classList.add(CLS.hidePdfToolbar);
     if (this.settings.lockNote) classList.add(CLS.lockNote);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
@@ -431,6 +464,17 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Hide Bases toolbar",
       "Hides the toolbar at the top of a .base file view (view name, sorting, filters, etc.).",
       "hideBaseToolbar",
+      "Hide header bar",
+      "Hides the view header bar — the note title and the back/forward navigation buttons shown on desktop.",
+      "hideViewHeader",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Hide PDF toolbar",
+      "Hides the top toolbar (zoom, page navigation, etc.) shown when reading a PDF.",
+      "hidePdfToolbar",
       save,
     );
 
@@ -455,6 +499,14 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Exit zen mode on note close",
       "Automatically exits zen mode when the active note is closed or navigated away from.",
       "exitOnNoteClose",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
+      "Full screen on activation",
+      "Automatically enters full screen when zen mode is activated, and leaves it on exit.",
+      "fullScreenOnActivate",
       save,
     );
 
