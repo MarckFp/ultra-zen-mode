@@ -57,6 +57,12 @@ html
   display: none;
 }
 
+/* ─── Bases toolbar (.base view name, sorting, filters, ordering) ──── */
+/* The toolbar sits inside a .bases-header band; hiding only the toolbar */
+/* leaves that band's height behind as a gap, so hide the whole header.  */
+/* .bases-toolbar is kept as a fallback for layouts without the wrapper. */
+html body.uzm-active.uzm-hide-base-toolbar .bases-header,
+html body.uzm-active.uzm-hide-base-toolbar .bases-toolbar {
 /* ─── Header bar (title + back/forward nav buttons, desktop) ─────── */
 /* Fully hides the per-view header. On frameless windows the titlebar   */
 /* drag area lives in the tab-header strip (handled above), not here,   */
