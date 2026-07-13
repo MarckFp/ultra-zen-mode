@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.16] – 2026-07-13
+
+- Added toggle for 'Hide Bases toolbar' option to settings
+- Added toggle for 'Hide header bar' option to settings
 - Added "Hide Bases toolbar" option to hide the toolbar at the top of a `.base` file view (view name, sorting, filters, ordering, etc.).
 - Added "Full screen on activation" option to automatically enter full screen when zen mode is activated and leave it on exit.
 - Added "Hide header bar" option to hide the view header — the note title and the back/forward navigation buttons shown on desktop.

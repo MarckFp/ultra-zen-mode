@@ -464,6 +464,11 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       "Hide Bases toolbar",
       "Hides the toolbar at the top of a .base file view (view name, sorting, filters, etc.).",
       "hideBaseToolbar",
+      save,
+    );
+
+    this.addToggle(
+      containerEl,
       "Hide header bar",
       "Hides the view header bar — the note title and the back/forward navigation buttons shown on desktop.",
       "hideViewHeader",
