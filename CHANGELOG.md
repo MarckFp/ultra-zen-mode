@@ -8,6 +8,10 @@ To release: run `npm run release` — it seals `[Unreleased]`, commits, tags, an
 
 ## [Unreleased]
 
+## [1.18.0] – 2026-07-14
+
+- Changed references from 'document' to 'activeDocument' for improved context handling in the plugin.
+- Updated fullscreen handling to use 'activeDocument' instead of 'document'.
 ## [1.17.0] – 2026-07-13
 
 - Added a new settings interface for customizing zen mode options including theme selection and various display toggles.

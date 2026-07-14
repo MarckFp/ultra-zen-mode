@@ -109,7 +109,7 @@ export default class UltraZenModePlugin extends Plugin {
 
     // ── Lock note: intercept dblclick before Obsidian handles it ──────────
     this.registerDomEvent(
-      document,
+      activeDocument,
       "dblclick",
       (e: MouseEvent) => {
         if (!this.isZenActive || !this.settings.lockNote) return;
@@ -180,14 +180,14 @@ export default class UltraZenModePlugin extends Plugin {
         if (!this.isZenActive || !this.settings.lockNote) return;
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (view && view.getMode() !== "preview") {
-          document.body.classList.add(CLS.reverting);
+          activeDocument.body.classList.add(CLS.reverting);
           const state = view.getState();
           void view
             .setState({ ...state, mode: "preview" }, { history: false })
             .then(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  document.body.classList.remove(CLS.reverting);
+              window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                  activeDocument.body.classList.remove(CLS.reverting);
                 });
               });
             });
@@ -222,7 +222,7 @@ export default class UltraZenModePlugin extends Plugin {
         (vault["getConfig"]?.("swipeToOpenDrawers") as boolean | undefined) ??
         null;
       vault["setConfig"]?.("swipeToOpenDrawers", false);
-      document.body.setAttribute("data-ignore-swipe", "true");
+      activeDocument.body.setAttribute("data-ignore-swipe", "true");
     }
 
     // ── Zen theme ─────────────────────────────────────────────────────────
@@ -255,9 +255,9 @@ export default class UltraZenModePlugin extends Plugin {
       this.settings.limitLineLength,
     );
     if (this.settings.limitLineLength) {
-      document.body.classList.add("is-readable-line-width");
+      activeDocument.body.classList.add("is-readable-line-width");
     } else {
-      document.body.classList.remove("is-readable-line-width");
+      activeDocument.body.classList.remove("is-readable-line-width");
     }
 
     this.isZenActive = true;
@@ -286,7 +286,7 @@ export default class UltraZenModePlugin extends Plugin {
       vault["setConfig"]?.("swipeToOpenDrawers", this.savedSwipeDrawers);
       this.savedSwipeDrawers = null;
     }
-    document.body.removeAttribute("data-ignore-swipe");
+    activeDocument.body.removeAttribute("data-ignore-swipe");
 
     // ── Restore zen theme ─────────────────────────────────────────────────
     if (this.savedTheme !== null) {
@@ -299,7 +299,9 @@ export default class UltraZenModePlugin extends Plugin {
             | ((name: string) => Promise<void>)
             | undefined
         )?.(this.savedTheme);
-      } catch {}
+      } catch {
+        // ignore
+      }
       this.savedTheme = null;
     }
 
@@ -314,9 +316,9 @@ export default class UltraZenModePlugin extends Plugin {
         this.savedReadableLineLength,
       );
       if (this.savedReadableLineLength) {
-        document.body.classList.add("is-readable-line-width");
+        activeDocument.body.classList.add("is-readable-line-width");
       } else {
-        document.body.classList.remove("is-readable-line-width");
+        activeDocument.body.classList.remove("is-readable-line-width");
       }
       this.savedReadableLineLength = null;
     }
@@ -347,7 +349,7 @@ export default class UltraZenModePlugin extends Plugin {
       sel: string,
       getSplit: () => { collapsed: boolean; collapse(): void },
     ) => {
-      const el = document.querySelector(sel);
+      const el = activeDocument.querySelector(sel);
       if (!el) return;
       const obs = new MutationObserver(() => {
         if (this.isZenActive && !getSplit().collapsed) getSplit().collapse();
@@ -367,8 +369,8 @@ export default class UltraZenModePlugin extends Plugin {
   // ─── Full screen helpers ────────────────────────────────────────────────
 
   private enterFullScreen(): void {
-    const el = document.documentElement;
-    if (document.fullscreenElement || !el.requestFullscreen) return;
+    const el = activeDocument.documentElement;
+    if (activeDocument.fullscreenElement || !el.requestFullscreen) return;
     this.enteredFullScreen = true;
     el.requestFullscreen().catch(() => {
       this.enteredFullScreen = false;
@@ -376,8 +378,8 @@ export default class UltraZenModePlugin extends Plugin {
   }
 
   private exitFullScreen(): void {
-    if (this.enteredFullScreen && document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => {});
+    if (this.enteredFullScreen && activeDocument.fullscreenElement) {
+      void activeDocument.exitFullscreen().catch(() => {});
     }
     this.enteredFullScreen = false;
   }
@@ -408,7 +410,7 @@ export default class UltraZenModePlugin extends Plugin {
   // ─── Body class helpers ─────────────────────────────────────────────────
 
   private applyBodyClasses(): void {
-    const { classList } = document.body;
+    const { classList } = activeDocument.body;
     classList.add(CLS.active);
     if (this.settings.hideSidebars) classList.add(CLS.hideSidebars);
     if (this.settings.hideProperties) classList.add(CLS.hideProperties);
@@ -427,7 +429,7 @@ export default class UltraZenModePlugin extends Plugin {
   }
 
   private removeBodyClasses(): void {
-    document.body.classList.remove(...Object.values(CLS));
+    activeDocument.body.classList.remove(...Object.values(CLS));
   }
 
   // ─── Floating exit button ───────────────────────────────────────────────
@@ -435,31 +437,42 @@ export default class UltraZenModePlugin extends Plugin {
   private mountFloatingButton(): void {
     if (this.floatingBtn) return;
 
-    const btn = document.createElement("button");
+    const btn = activeDocument.createElement("button");
     btn.className = "uzm-exit-btn";
     btn.setAttribute("aria-label", "Exit Zen Mode");
     btn.setAttribute("title", "Exit Zen Mode");
 
     // Inline SVG: eye-off (Lucide)
-    btn.innerHTML = `
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-				fill="none" stroke="currentColor"
-				stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-				width="18" height="18" aria-hidden="true">
-				<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20
-					C5 20 1 12 1 12
-					a18.45 18.45 0 0 1 5.06-5.94"/>
-				<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4
-					C19 4 23 12 23 12
-					a18.5 18.5 0 0 1-2.16 3.19"/>
-				<path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
-				<line x1="1" y1="1" x2="23" y2="23"/>
-			</svg>`.trim();
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = activeDocument.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.setAttribute("width", "18");
+    svg.setAttribute("height", "18");
+    svg.setAttribute("aria-hidden", "true");
+    for (const d of [
+      "M17.94 17.94A10.07 10.07 0 0 1 12 20 C5 20 1 12 1 12 a18.45 18.45 0 0 1 5.06-5.94",
+      "M9.9 4.24A9.12 9.12 0 0 1 12 4 C19 4 23 12 23 12 a18.5 18.5 0 0 1-2.16 3.19",
+      "M14.12 14.12a3 3 0 1 1-4.24-4.24",
+    ]) {
+      const path = activeDocument.createElementNS(svgNS, "path");
+      path.setAttribute("d", d);
+      svg.appendChild(path);
+    }
+    const ln = activeDocument.createElementNS(svgNS, "line");
+    ln.setAttribute("x1", "1"); ln.setAttribute("y1", "1");
+    ln.setAttribute("x2", "23"); ln.setAttribute("y2", "23");
+    svg.appendChild(ln);
+    btn.appendChild(svg);
 
     // Use registerDomEvent so the listener is automatically cleaned up
     this.registerDomEvent(btn, "click", () => this.exitZenMode());
 
-    document.body.appendChild(btn);
+    activeDocument.body.appendChild(btn);
     this.floatingBtn = btn;
   }
 
