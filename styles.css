@@ -53,7 +53,13 @@ html
 }
 html
   body.uzm-active.uzm-hide-tab-bar.is-frameless
-  .workspace-tab-header-container-inner {
+  .workspace-tab-header-container-inner,
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-new-tab,
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-tab-list {
   display: none;
 }
 
@@ -132,17 +138,28 @@ html body.uzm-active .workspace-drawer-backdrop {
   pointer-events: none;
 }
 
-/* ─── Hide other open documents (non-active leaves in the root split) ── */
+/* ─── Hide other open documents ───────────────────────────────────── */
+/* Hide whole tab groups and nested splits that don't hold the active   */
+/* note, not just their leaves. Otherwise the empty groups keep their   */
+/* frames, borders (e.g. Minimal's workspace borders) and "+" buttons.  */
+/* Resize handles at every nesting level go too, as do inactive leaves  */
+/* inside the active group (stacked tabs).                              */
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-tabs:not(:has(.workspace-leaf.mod-active)),
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-split:not(:has(.workspace-leaf.mod-active)),
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-leaf-resize-handle,
 html
   body.uzm-active.uzm-hide-open-documents
   .workspace-split.mod-root
   .workspace-leaf:not(.mod-active) {
-  display: none;
-}
-html
-  body.uzm-active.uzm-hide-open-documents
-  .workspace-split.mod-root
-  > .workspace-leaf-resize-handle {
   display: none;
 }
 

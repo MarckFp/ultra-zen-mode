@@ -89,6 +89,15 @@ export default class UltraZenModePlugin extends Plugin {
   /** Obsidian's readableLineLength config value before zen mode, restored on exit. */
   private savedReadableLineLength: boolean | null = null;
 
+  /**
+   * Lock note only makes sense on top of reading mode. Without it the note
+   * stays in the editor, and the lock's CSS (which hides the source view)
+   * would render the text invisible.
+   */
+  private get lockActive(): boolean {
+    return this.settings.lockNote && this.settings.switchToReadingMode;
+  }
+
   async onload(): Promise<void> {
     await this.loadSettings();
 
@@ -112,7 +121,7 @@ export default class UltraZenModePlugin extends Plugin {
       activeDocument,
       "dblclick",
       (e: MouseEvent) => {
-        if (!this.isZenActive || !this.settings.lockNote) return;
+        if (!this.isZenActive || !this.lockActive) return;
         const target = e.target as Element | null;
         if (target?.closest(".markdown-preview-view")) {
           e.stopPropagation();
@@ -131,7 +140,7 @@ export default class UltraZenModePlugin extends Plugin {
       window,
       "touchend",
       (e: TouchEvent) => {
-        if (!this.isZenActive || !this.settings.lockNote) return;
+        if (!this.isZenActive || !this.lockActive) return;
         const target = e.target as Element | null;
         if (!target?.closest(".markdown-preview-view")) return;
         if (
@@ -177,7 +186,7 @@ export default class UltraZenModePlugin extends Plugin {
     // one for paint) to guarantee the reading view is rendered first.
     this.registerEvent(
       this.app.workspace.on("layout-change", () => {
-        if (!this.isZenActive || !this.settings.lockNote) return;
+        if (!this.isZenActive || !this.lockActive) return;
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (view && view.getMode() !== "preview") {
           activeDocument.body.classList.add(CLS.reverting);
@@ -420,7 +429,7 @@ export default class UltraZenModePlugin extends Plugin {
     if (this.settings.hideBaseToolbar) classList.add(CLS.hideBaseToolbar);
     if (this.settings.hideViewHeader) classList.add(CLS.hideViewHeader);
     if (this.settings.hidePdfToolbar) classList.add(CLS.hidePdfToolbar);
-    if (this.settings.lockNote) classList.add(CLS.lockNote);
+    if (this.lockActive) classList.add(CLS.lockNote);
     if (this.settings.hideOpenDocuments) classList.add(CLS.hideOpenDocuments);
     if (this.settings.headerPadding === "small") classList.add(CLS.headerSmall);
     else if (this.settings.headerPadding === "medium")
@@ -493,6 +502,15 @@ export default class UltraZenModePlugin extends Plugin {
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+    // Re-apply the CSS-driven options so changes take effect without
+    // having to leave and re-enter zen mode.
+    if (this.isZenActive) {
+      this.removeBodyClasses();
+      this.applyBodyClasses();
+      // If reading mode was just turned on, the lock's CSS now hides the
+      // editor, so move the note into reading mode to keep it visible.
+      if (this.settings.switchToReadingMode) await this.switchToReadingMode();
+    }
   }
 }
 
@@ -589,7 +607,7 @@ class UltraZenModeSettingTab extends PluginSettingTab {
       },
       {
         name: "Lock note (prevent editing)",
-        desc: "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active.",
+        desc: "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active. Only applies when “Switch to reading mode” is on.",
         control: { type: "toggle", key: "lockNote" },
       },
       {
@@ -737,7 +755,7 @@ class UltraZenModeSettingTab extends PluginSettingTab {
     this.addToggle(
       containerEl,
       "Lock note (prevent editing)",
-      "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active.",
+      "Blocks double-click and other gestures that would switch the note into edit mode while zen mode is active. Only applies when “Switch to reading mode” is on.",
       "lockNote",
       save,
     );
