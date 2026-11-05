@@ -53,7 +53,13 @@ html
 }
 html
   body.uzm-active.uzm-hide-tab-bar.is-frameless
-  .workspace-tab-header-container-inner {
+  .workspace-tab-header-container-inner,
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-new-tab,
+html
+  body.uzm-active.uzm-hide-tab-bar.is-frameless
+  .workspace-tab-header-tab-list {
   display: none;
 }
 
@@ -132,18 +138,101 @@ html body.uzm-active .workspace-drawer-backdrop {
   pointer-events: none;
 }
 
-/* ─── Hide other open documents (non-active leaves in the root split) ── */
+/* ─── Hide other open documents ───────────────────────────────────── */
+/* Hide whole tab groups and nested splits that don't hold the active   */
+/* note, not just their leaves. Otherwise the empty groups keep their   */
+/* frames, borders (e.g. Minimal's workspace borders) and "+" buttons.  */
+/* Resize handles at every nesting level go too, as do inactive leaves  */
+/* inside the active group (stacked tabs).                              */
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-tabs:not(:has(.workspace-leaf.mod-active)),
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-split:not(:has(.workspace-leaf.mod-active)),
+html
+  body.uzm-active.uzm-hide-open-documents
+  .workspace-split.mod-root
+  .workspace-leaf-resize-handle,
 html
   body.uzm-active.uzm-hide-open-documents
   .workspace-split.mod-root
   .workspace-leaf:not(.mod-active) {
   display: none;
 }
+
+/* ─── Custom line width and font size ─────────────────────────────── */
+/* The variables are set on the main area and on the views themselves,  */
+/* so they win over the values Obsidian and most themes put on <body>.  */
+/* --line-width is the Minimal theme's own line-width variable.         */
+html body.uzm-active.uzm-custom-line-width .workspace-split.mod-root,
 html
-  body.uzm-active.uzm-hide-open-documents
+  body.uzm-active.uzm-custom-line-width
   .workspace-split.mod-root
-  > .workspace-leaf-resize-handle {
+  .markdown-source-view,
+html
+  body.uzm-active.uzm-custom-line-width
+  .workspace-split.mod-root
+  .markdown-preview-view {
+  --file-line-width: var(--uzm-line-width);
+  --line-width: var(--uzm-line-width);
+}
+
+html body.uzm-active.uzm-custom-font-size .workspace-split.mod-root,
+html
+  body.uzm-active.uzm-custom-font-size
+  .workspace-split.mod-root
+  .markdown-source-view,
+html
+  body.uzm-active.uzm-custom-font-size
+  .workspace-split.mod-root
+  .markdown-preview-view {
+  --font-text-size: var(--uzm-font-size);
+}
+
+/* ─── Fade other lines (Live Preview / Source mode) ───────────────── */
+/* Only while the editor has focus, so an idle note is fully readable.  */
+html
+  body.uzm-active.uzm-fade-lines
+  .workspace-split.mod-root
+  .markdown-source-view.mod-cm6
+  .cm-line {
+  transition: opacity 0.2s ease;
+}
+html
+  body.uzm-active.uzm-fade-lines
+  .workspace-split.mod-root
+  .markdown-source-view.mod-cm6
+  .cm-editor.cm-focused
+  .cm-line:not(.cm-active) {
+  opacity: var(--uzm-faded-line-opacity, 0.3);
+}
+
+/* ─── Screen-edge vignette ─────────────────────────────────────────── */
+/* Solid from the edge to half the configured width, then fades out.    */
+/* Sits above the workspace but below popovers, menus and modals, and   */
+/* lets every click through.                                            */
+.uzm-vignette {
   display: none;
+}
+html body.uzm-active.uzm-show-vignette .uzm-vignette {
+  --uzm-vignette-color: rgba(0, 0, 0, var(--uzm-vignette-opacity, 0.85));
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: calc(var(--layer-status-bar, 15) + 1);
+  background: linear-gradient(
+    to right,
+    var(--uzm-vignette-color) 0,
+    var(--uzm-vignette-color) calc(var(--uzm-vignette-width, 20vw) * 0.5),
+    transparent var(--uzm-vignette-width, 20vw),
+    transparent calc(100% - var(--uzm-vignette-width, 20vw)),
+    var(--uzm-vignette-color) calc(100% - var(--uzm-vignette-width, 20vw) * 0.5),
+    var(--uzm-vignette-color) 100%
+  );
 }
 
 /* ─── Floating exit button ─────────────────────────────────────────── */
@@ -181,6 +270,10 @@ html
   /* Remove default button styles */
   padding: 0;
   outline: none;
+
+  /* Size of the eye-off icon added with setIcon() */
+  --icon-size: 18px;
+  --icon-stroke: 2px;
 }
 
 .uzm-exit-btn:hover,

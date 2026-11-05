@@ -37,22 +37,43 @@ To exit, click the floating button that appears in the bottom-right corner, or u
 
 ## Settings
 
-Open _Settings → Ultra Zen Mode_ to choose exactly what gets hidden:
+Open _Settings → Ultra Zen Mode_ to set up zen mode. Changes apply immediately, even while zen mode is on, except **Full screen on activation**, which applies the next time you enter zen mode.
 
-- **Hide left sidebar** — hides the icon ribbon and the sidebar panel on the left.
-- **Hide right sidebar** — hides the sidebar panel on the right.
-- **Hide note properties** — hides the YAML frontmatter / properties block at the top of a note.
-- **Hide note title** — hides the large inline title above the note body.
-- **Hide status bar** — hides the small bar at the very bottom of the window.
-- **Hide tab bar** — hides the row of open-note tabs above the editor.
-- **Switch to reading mode** — automatically enters reading view when zen mode activates and restores the previous mode on exit.
-- **Lock note (prevent editing)** — blocks double-click and any other gesture that would accidentally switch the note into edit mode while zen mode is active. The floating exit button is the only way to leave zen mode when this is on. _On by default._
-- **Header bar padding** — controls the height of the top bar left behind after the action buttons are hidden. Three options:
-  - _Small_ — nearly flush, minimal gap.
-  - _Medium_ — a comfortable reduced gap _(default)_.
-  - _Original_ — keeps Obsidian's default header height unchanged.
+### Appearance
 
-All settings take effect the next time you enter Zen Mode, so you can experiment freely.
+- **Zen theme** — switches to another installed theme in zen mode and back to your own theme on exit.
+- **Limit line length** — keeps lines at a readable width. When off, text uses the full width of the window.
+- **Line width** — maximum line length in characters. `0` uses your theme's width.
+- **Font size** — text size in zen mode only. `0` keeps your normal size.
+- **Header bar padding** — height of the top bar left behind after the action buttons are hidden: _Small_, _Medium_ (default) or _Original_.
+
+### Focus
+
+- **Fade other lines** — while you type, dims every line except the one with the cursor. Works in Live Preview and Source mode. **Faded line opacity** sets how visible the dimmed lines stay.
+- **Darken screen edges** — darkens the left and right edges of the window to frame the text, which helps on wide screens. **Edge width** and **Edge darkness** set how far in the edges reach and how dark they are.
+
+### Hide
+
+- **Hide sidebars and command palette** — hides both sidebars and the ribbon, and blocks the swipe gestures that open them.
+- **Hide note properties** — hides the properties (YAML frontmatter) block.
+- **Hide note title** — hides the large inline title above the note.
+- **Hide status bar** — hides the bar at the bottom of the window.
+- **Hide tab bar** — hides the row of tabs above the editor.
+- **Hide other open documents** — hides every other pane and split, so only the note you are in is visible.
+- **Hide Bases toolbar**, **Hide header bar**, **Hide PDF toolbar** — hide those toolbars.
+
+### Behaviour
+
+- **Switch to reading mode** — opens the note in reading view and returns to the previous mode on exit. Turn this off to write in zen mode.
+- **Lock note (prevent editing)** — blocks double-click and other gestures that would switch the note into edit mode. Only works together with **Switch to reading mode**. _On by default._
+- **Exit zen mode on note close** — leaves zen mode when you close the note or move to another one.
+- **Full screen on activation** — enters full screen with zen mode and leaves it on exit.
+
+### Writing setup
+
+For a distraction-free writing setup, turn off **Switch to reading mode**, then turn on **Hide other open documents**, **Fade other lines** and **Darken screen edges**, and pick a **Zen theme**.
+
+If Obsidian closes while zen mode is on, your own theme, line length and sidebar layout are restored the next time it starts.
 
 ---
 
@@ -105,8 +126,10 @@ Copy `main.js`, `styles.css`, and `manifest.json` into your vault's plugin folde
 
 Ultra Zen Mode is intentionally simple and fast. The entire logic lives in a single file, `src/main.ts`, and works in three steps:
 
-1. **Activate** — adds a set of CSS classes (e.g. `uzm-hide-left-sidebar`) to `document.body`.
-2. **Style** — `styles.css` contains scoped rules that hide the target elements only while those classes are present. Nothing leaks outside of Zen Mode.
-3. **Deactivate** — removes all classes and the floating button. The UI is instantly restored; no DOM manipulation required.
+1. **Activate** — adds CSS classes (e.g. `uzm-hide-sidebars`) and a few CSS variables (line width, font size, fade and vignette values) to `document.body`, and adds the floating button and the vignette overlay.
+2. **Style** — `styles.css` contains scoped rules that apply only while those classes are present. Nothing leaks outside of Zen Mode.
+3. **Deactivate** — removes the classes, variables and overlays, and puts back the app settings zen mode changed.
 
-Because the approach is pure CSS class toggling, it is extremely fast and does not rely on timers, MutationObservers, or any polling.
+Most of the work is CSS class toggling. A few things need app settings instead: the zen theme, readable line length and the sidebar swipe gestures. Before changing them, the plugin saves the original values in the vault's local storage on this device. If Obsidian quits while zen mode is on, those values are restored on the next start.
+
+Obsidian has no public API for themes or app config, so `src/main.ts` reaches those internals through one small wrapper, `ObsidianInternals`.
